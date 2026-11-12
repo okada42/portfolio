@@ -908,7 +908,7 @@
         // screens the camera backs off along its view direction (and the default view shifts
         // left so the developer character stays in frame).
         // Phone framing (t = 1): camera distance multiplier and target shift
-        const PHONE_VIEW = { k: 1.62, sx: -0.8, sy: -0.05 };
+        const PHONE_VIEW = { k: 1.9, sx: -0.38, sy: 0.32 };
         function currentAspect() {
             return camera ? camera.aspect : (window.innerWidth / Math.max(1, window.innerHeight));
         }
@@ -1186,16 +1186,17 @@
         // Smaller, symmetrical 4-frame portfolio galleries on BOTH Right and Left sides of the PC desk
         function buildGalleryFrames() {
             const framePositions = [
-                // 4 Right-side frames (2x2 grid at x = 3.18 & 4.26)
-                { x: 3.18, y: 2.66 },
-                { x: 4.26, y: 2.66 },
-                { x: 3.18, y: 1.82 },
-                { x: 4.26, y: 1.82 },
-                // 4 Left-side frames (mirror-symmetric 2x2 grid around desk center x = 1.48 -> x = -0.22 & -1.30)
-                { x: -0.22, y: 2.66 },
-                { x: -1.30, y: 2.66 },
-                { x: -0.22, y: 1.82 },
-                { x: -1.30, y: 1.82 }
+                // Compact 2x4 grid directly above the desk (desk center x = 1.48) so all 8 fit on a phone screen
+                // 4 right-group frames
+                { x: 1.84, y: 2.56 },
+                { x: 2.56, y: 2.56 },
+                { x: 1.84, y: 1.95 },
+                { x: 2.56, y: 1.95 },
+                // 4 left-group frames (mirrored)
+                { x: 1.12, y: 2.56 },
+                { x: 0.40, y: 2.56 },
+                { x: 1.12, y: 1.95 },
+                { x: 0.40, y: 1.95 }
             ];
 
             const frameMat = new THREE.MeshStandardMaterial({ color: '#1A1A1A', roughness: 0.35, metalness: 0.3 });
@@ -1207,6 +1208,7 @@
 
                 const frameGroup = new THREE.Group();
                 frameGroup.position.set(pos.x, pos.y, -1.89);
+                frameGroup.scale.setScalar(0.68);
 
                 // Refined Smaller Matte Black Outer Frame (0.94m x 0.66m x 0.045m)
                 const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.66, 0.045), frameMat);
@@ -1229,7 +1231,7 @@
                 artMesh.userData = {
                     type: 'project',
                     data: proj,
-                    focusPos: new THREE.Vector3(pos.x, pos.y, 0.15),
+                    focusPos: new THREE.Vector3(pos.x, pos.y, -0.45),
                     focusTarget: new THREE.Vector3(pos.x, pos.y, -1.89)
                 };
 
@@ -1271,7 +1273,7 @@
         function buildBookshelfAndBooks() {
             const shelfGroup = new THREE.Group();
             const shelfX = 1.48;
-            const shelfY = 2.34;
+            const shelfY = 3.06;
             const shelfZ = -1.72;
             shelfGroup.position.set(shelfX, shelfY, shelfZ);
 
@@ -2386,14 +2388,14 @@
         function focusZone(zone) {
             const p = new THREE.Vector3(), q = new THREE.Vector3();
             if (zone === 'galleryLeft') {
-                p.set(-0.76, 2.24, 1.45);
-                q.set(-0.76, 2.24, -1.89);
+                p.set(0.76, 2.19, 0.35);
+                q.set(0.76, 2.19, -1.89);
             } else if (zone === 'galleryRight') {
-                p.set(3.72, 2.24, 1.45);
-                q.set(3.72, 2.24, -1.89);
+                p.set(2.2, 2.19, 0.35);
+                q.set(2.2, 2.19, -1.89);
             } else if (zone === 'bookshelf') {
-                p.set(1.48, 2.55, 0.95);
-                q.set(1.48, 2.48, -1.72);
+                p.set(1.48, 3.1, 0.75);
+                q.set(1.48, 3.15, -1.72);
             } else if (zone === 'monitor') {
                 p.set(1.44, 1.40, 0.55);
                 q.set(1.48, 1.25, -1.05);
