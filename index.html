@@ -1346,17 +1346,19 @@
             ctx.font = '600 14px "Noto Sans JP", sans-serif';
             ctx.fillText(`${proj.metricLabel}: ${proj.metricValue}`, 54, 192);
 
-            // Bottom Gallery Caption Area
-            ctx.fillStyle = '#1A1A1A';
-            ctx.font = '600 16px "Noto Sans JP", sans-serif';
-            ctx.fillText(proj.title, 24, 276);
-
-            ctx.fillStyle = '#6B7280';
-            ctx.font = '13px monospace';
-            ctx.fillText(proj.stackValue, 24, 306);
+            // Bottom Gallery Caption Area (title + tech stack: black, bold, auto-fit to the matte width)
+            const fitText = (text, weight, maxSize, family, y, color) => {
+                let size = maxSize;
+                do { ctx.font = `${weight} ${size}px ${family}`; size -= 1; } while (ctx.measureText(text).width > 464 && size > 10);
+                ctx.fillStyle = color;
+                ctx.fillText(text, 24, y);
+            };
+            fitText(proj.title, 700, 19, '"Noto Sans JP", sans-serif', 278, '#111111');
+            fitText(proj.stackValue, 800, 20, '"Noto Sans JP", Inter, sans-serif', 314, '#000000');
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.anisotropy = 4;
+            tex.encoding = THREE.sRGBEncoding; // canvas colours are sRGB; without this they render washed out
             return tex;
         }
 
