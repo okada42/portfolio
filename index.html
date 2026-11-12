@@ -1073,6 +1073,45 @@
             const backTrim = new THREE.Mesh(new THREE.BoxGeometry(12.3, 0.12, 0.04), trimMat);
             backTrim.position.set(1.48, 0.06, -1.91);
             scene.add(backTrim);
+
+            // --- Decorative accent lines (amber / terracotta / sage) ---
+            const ACCENTS = [
+                { color: '#D9A441', h: 0.028 },  // amber
+                { color: '#C8664A', h: 0.012 },  // terracotta
+                { color: '#7FA38A', h: 0.012 }   // sage
+            ];
+            const accentMats = ACCENTS.map(a => new THREE.MeshStandardMaterial({ color: a.color, roughness: 0.6 }));
+
+            // Wall band: three thin stripes at chair-rail height on back and side walls
+            const bandY = 1.08;
+            ACCENTS.forEach((a, i) => {
+                const y = bandY - i * 0.05;
+                const back = new THREE.Mesh(new THREE.BoxGeometry(12.3, a.h, 0.012), accentMats[i]);
+                back.position.set(1.48, y, -1.918);
+                scene.add(back);
+                [[-4.518, 1], [7.468, -1]].forEach(([x]) => {
+                    const side = new THREE.Mesh(new THREE.BoxGeometry(0.012, a.h, 6.3), accentMats[i]);
+                    side.position.set(x, y, 1.0);
+                    scene.add(side);
+                });
+            });
+            // Thin amber line on top of the baseboard
+            const baseLine = new THREE.Mesh(new THREE.BoxGeometry(12.3, 0.01, 0.045), accentMats[0]);
+            baseLine.position.set(1.48, 0.125, -1.905);
+            scene.add(baseLine);
+
+            // Floor: nested rectangle outlines framing the work area like an inlaid rug
+            const addFloorRect = (cx, cz, w, d, lw, mat, y) => {
+                [[0, -d / 2, w, lw], [0, d / 2, w, lw], [-w / 2, 0, lw, d], [w / 2, 0, lw, d]].forEach(([dx, dz, sx, sz]) => {
+                    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.003, sz), mat);
+                    m.position.set(cx + dx, y, cz + dz);
+                    m.receiveShadow = true;
+                    scene.add(m);
+                });
+            };
+            addFloorRect(1.15, -0.35, 5.0, 3.0, 0.035, accentMats[0], 0.004);
+            addFloorRect(1.15, -0.35, 4.8, 2.8, 0.014, accentMats[1], 0.005);
+            addFloorRect(1.15, -0.35, 4.66, 2.66, 0.014, accentMats[2], 0.005);
         }
 
         function createProjectFrameTexture(proj, index) {
