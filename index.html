@@ -2106,7 +2106,7 @@
         // Ergonomic swivel studio chair + organically sculpted 3D human developer seated on the left side of the PC
         function buildChairAndCharacter() {
             const group = new THREE.Group();
-            group.position.set(1.62, 0, -0.3);   // a little right of the Mac centre
+            group.position.set(1.92, 0, -0.3);   // right of the Mac centre
             group.rotation.y = Math.PI;          // facing the desk
 
             // Swivel Assembly (so the whole chair + char rotates)
@@ -2777,7 +2777,7 @@
                 }
 
                 // Rest: chair angled ~15 deg to the left. Greeting: swivel to face wherever the visitor's camera is.
-                const REST_SWIVEL = THREE.MathUtils.degToRad(30);
+                const REST_SWIVEL = THREE.MathUtils.degToRad(45);
                 const rootPos = new THREE.Vector3();
                 characterRig.rootGroup.getWorldPosition(rootPos);
                 const toCam = camera.position.clone().sub(rootPos);
