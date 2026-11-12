@@ -142,7 +142,7 @@
 
         <!-- Studio Overlay: Top-Left Architectural Legend & Quick Focus Buttons -->
         <div class="studio-legend absolute top-[6.5rem] lg:top-20 left-3 right-3 sm:left-6 sm:right-auto z-20 sm:max-w-sm pointer-events-auto">
-            <div class="bg-studioWall/92 backdrop-blur-md border border-subtleBorder rounded-xl p-3 sm:p-4 shadow-sm">
+            <div class="bg-studioWall/95 backdrop-blur-md border border-subtleBorder rounded-xl p-3 sm:p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-[11px] font-mono tracking-wider text-oakWood font-semibold uppercase">[ ARCHITECTURAL STUDIO ]</span>
                     <button onclick="resetCameraView()" class="text-[11px] font-medium px-2.5 py-1 rounded bg-studioWarm hover:bg-subtleBorder text-matteBlack transition-colors border border-subtleBorder">
@@ -179,6 +179,9 @@
 
         <!-- Quick Index Drawer Trigger (Bottom Right) -->
         <div class="absolute bottom-4 sm:bottom-5 left-3 right-3 sm:left-auto sm:right-6 z-20 flex justify-center sm:justify-end space-x-2">
+            <button id="daynight-btn" onclick="toggleDayNight()" aria-pressed="false" title="Day / Night" class="px-3.5 py-2.5 rounded-xl bg-matteBlack hover:bg-oakWood text-white backdrop-blur-md border border-matteBlack shadow-sm text-xs font-medium transition-colors whitespace-nowrap">
+                ☀<span class="hidden sm:inline"> Day</span>
+            </button>
             <button onclick="triggerDeveloperGreeting()" class="px-3.5 py-2.5 rounded-xl bg-studioWarm/95 hover:bg-white backdrop-blur-md border border-subtleBorder shadow-sm text-xs font-medium text-matteBlack transition-colors">
                 ▶ 挨拶を再生
             </button>
@@ -1006,6 +1009,9 @@
         let monitorAnimTick = 0;
         let pcFanMeshes = [];
         let characterRig = null;
+        // Day / night lighting state (0 = day, 1 = night), eased each frame
+        const studioLights = { spots: [] };
+        let nightTarget = 0, nightBlend = 0;
         const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
             active: false,
@@ -1060,6 +1066,7 @@
             // Studio Lighting
             const ambientLight = new THREE.AmbientLight(0xfffdf9, 0.5);
             scene.add(ambientLight);
+            studioLights.ambient = ambientLight;
 
             const dirLight = new THREE.DirectionalLight(0xfff8ee, 0.6);
             dirLight.position.set(4.5, 7.5, 5.5);
@@ -1074,6 +1081,7 @@
             dirLight.shadow.camera.bottom = -3;
             dirLight.shadow.bias = -0.0005;
             scene.add(dirLight);
+            studioLights.dir = dirLight;
 
             // Gallery picture lights: warm, focused beams on the frame wall and bookshelf
             const addSpot = (intensity, angle, px, py, pz, tx, ty, tz) => {
@@ -1081,6 +1089,8 @@
                 sp.position.set(px, py, pz);
                 sp.target.position.set(tx, ty, tz);
                 scene.add(sp); scene.add(sp.target);
+                sp.userData.dayIntensity = intensity;
+                studioLights.spots.push(sp);
                 return sp;
             };
             addSpot(1.0, Math.PI / 7, 0.76, 4.2, 0.4, 0.76, 2.25, -1.9);   // left frame group
@@ -1106,6 +1116,11 @@
             });
             renderer.domElement.addEventListener('click', onCanvasClick);
             window.addEventListener('resize', onWindowResize);
+
+            let savedNight = false;
+            try { savedNight = localStorage.getItem('studio-night') === '1'; } catch (e) {}
+            setNightMode(savedNight);
+            if (savedNight) { nightBlend = 1; applyDayNight(1); }
 
             animateThreeStudio();
         }
@@ -1948,8 +1963,24 @@
 
             const lampShade = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.068, 0.11, 20), matteBlackMat);
             lampShade.position.set(lampX + 0.07, deskH + 0.43, lampZ - 0.04);
-            lampShade.rotation.z = -0.55;
+            lampShade.rotation.z = 0.55;               // opening faces the keyboard / screen
             deskGroup.add(lampShade);
+
+            // Night lamp: bulb glow + warm spot onto the desk in front of the Mac (off during the day)
+            const shadeDir = new THREE.Vector3(Math.sin(0.55), -Math.cos(0.55), 0);
+            const bulbPos = lampShade.position.clone().addScaledVector(shadeDir, 0.045);
+            const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 12),
+                new THREE.MeshBasicMaterial({ color: '#FFE2A8', transparent: true, opacity: 0 }));
+            lampBulb.position.copy(bulbPos);
+            deskGroup.add(lampBulb);
+            const lampSpot = new THREE.SpotLight(0xffc477, 0, 3.2, Math.PI / 3.6, 0.65, 1.4);
+            lampSpot.position.copy(bulbPos);
+            lampSpot.target.position.set(deskX - 0.35, deskH, deskZ + 0.12);
+            deskGroup.add(lampSpot); deskGroup.add(lampSpot.target);
+            const lampGlow = new THREE.PointLight(0xffb867, 0, 1.6, 2);
+            lampGlow.position.copy(bulbPos);
+            deskGroup.add(lampGlow);
+            studioLights.lamp = { bulb: lampBulb, spot: lampSpot, glow: lampGlow };
 
             // No tower: the all-in-one Mac replaces the PC
             pcFanMeshes = [];
@@ -2608,8 +2639,44 @@
             isCameraAnimating = true;
         }
 
+        const DAY_BG = new THREE.Color('#F8F7F4'), NIGHT_BG = new THREE.Color('#141a26');
+        const DAY_AMB = new THREE.Color(0xfffdf9), NIGHT_AMB = new THREE.Color('#8796c4');
+        const DAY_DIR = new THREE.Color(0xfff8ee), NIGHT_DIR = new THREE.Color('#9fb4ff');
+        function applyDayNight(b) {
+            if (!scene || !studioLights.ambient) return;
+            const L = THREE.MathUtils.lerp;
+            studioLights.ambient.intensity = L(0.5, 0.13, b);
+            studioLights.ambient.color.copy(DAY_AMB).lerp(NIGHT_AMB, b);
+            studioLights.dir.intensity = L(0.6, 0.07, b);
+            studioLights.dir.color.copy(DAY_DIR).lerp(NIGHT_DIR, b);
+            studioLights.spots.forEach(sp => sp.intensity = sp.userData.dayIntensity * L(1, 0.5, b));
+            if (studioLights.lamp) {
+                studioLights.lamp.spot.intensity = 2.6 * b;
+                studioLights.lamp.glow.intensity = 0.9 * b;
+                studioLights.lamp.bulb.material.opacity = b;
+            }
+            scene.background.copy(DAY_BG).lerp(NIGHT_BG, b);
+            if (scene.fog) scene.fog.color.copy(scene.background);
+        }
+        function setNightMode(night) {
+            nightTarget = night ? 1 : 0;
+            try { localStorage.setItem('studio-night', night ? '1' : '0'); } catch (e) {}
+            const btn = document.getElementById('daynight-btn');
+            if (btn) {
+                btn.setAttribute('aria-pressed', night ? 'true' : 'false');
+                btn.innerHTML = night ? '☾<span class="hidden sm:inline"> Night</span>' : '☀<span class="hidden sm:inline"> Day</span>';
+            }
+        }
+        function toggleDayNight() { setNightMode(nightTarget < 0.5); }
+
         function animateThreeStudio() {
             requestAnimationFrame(animateThreeStudio);
+
+            if (Math.abs(nightBlend - nightTarget) > 0.001) {
+                nightBlend += (nightTarget - nightBlend) * 0.06;
+                if (Math.abs(nightBlend - nightTarget) < 0.002) nightBlend = nightTarget;
+                applyDayNight(nightBlend);
+            }
 
             if (isCameraAnimating && camera && controls) {
                 camera.position.lerp(targetCamPos, 0.08);
