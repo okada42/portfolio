@@ -2189,23 +2189,11 @@
                 const elbow = new THREE.Group(); elbow.position.set(0, -0.16, 0); shoulder.add(elbow);
                 capsule(0.034, 0.09, M.skin, elbow).position.set(0, -0.06, 0);
                 const hand = new THREE.Group(); hand.position.set(0, -0.125, 0); hand.scale.setScalar(1.25); elbow.add(hand);
-                blob(0.034, 1.0, 1.05, 0.62, M.skin, 0, -0.03, 0, hand, 20);                  // palm
-                blob(0.028, 1.15, 0.6, 0.7, M.skin, 0, -0.055, 0.002, hand, 16);              // knuckle pad
-                [-0.019, -0.0065, 0.0065, 0.019].forEach((fx, i) => {                         // four soft, slightly curled fingers
-                    const len = [0.017, 0.021, 0.02, 0.015][i];
-                    const base = new THREE.Group();
-                    base.position.set(fx, -0.06, 0.003); base.rotation.x = 0.35; base.rotation.z = fx * 1.5;
-                    hand.add(base);
-                    const seg1 = blob(0.0085, 1, 1, 1, M.skin, 0, -len * 0.5, 0, base, 10); seg1.scale.set(1, len / 0.0085 * 0.62, 0.92);
-                    const knuckle = new THREE.Group(); knuckle.position.set(0, -len, 0); knuckle.rotation.x = 0.45; base.add(knuckle);
-                    const seg2 = blob(0.0078, 1, 1, 1, M.skin, 0, -len * 0.42, 0, knuckle, 10); seg2.scale.set(1, len / 0.0078 * 0.5, 0.9);
-                });
-                const thumbBase = new THREE.Group();                                           // two-joint thumb
-                thumbBase.position.set(-side * 0.028, -0.03, 0.012); thumbBase.rotation.set(0.5, 0, -side * 0.85);
-                hand.add(thumbBase);
-                const t1 = blob(0.0105, 1, 1.5, 0.9, M.skin, 0, -0.012, 0, thumbBase, 10);
-                const tJoint = new THREE.Group(); tJoint.position.set(0, -0.024, 0); tJoint.rotation.x = 0.35; thumbBase.add(tJoint);
-                blob(0.0092, 1, 1.35, 0.9, M.skin, 0, -0.01, 0, tJoint, 10);
+                // Mitten hand: palm and the four fingers form one rounded block; the thumb is joined at the side
+                blob(0.034, 1.0, 1.0, 0.62, M.skin, 0, -0.028, 0, hand, 20);                   // palm
+                blob(0.033, 0.98, 1.2, 0.58, M.skin, 0, -0.06, 0.006, hand, 20);               // fingers as one mitten tip
+                const thumb = blob(0.016, 0.9, 1.45, 0.85, M.skin, -side * 0.027, -0.034, 0.012, hand, 14); // thumb, merged into the side
+                thumb.rotation.set(0.3, 0, -side * 0.55);
                 return { shoulder, elbow, hand };
             };
             const armL = buildArm(1, torsoBone);
