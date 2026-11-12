@@ -1680,41 +1680,38 @@
             deskMatMesh.receiveShadow = true;
             deskGroup.add(deskMatMesh);
 
-            // 3. Articulated Aluminum Monitor Arm
-            const armX = deskX - 0.06;
-            const armZ = deskZ - 0.37;
-            const clampBase = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.085), darkAlumMat);
-            clampBase.position.set(armX, deskH + 0.02, armZ);
-            deskGroup.add(clampBase);
-
-            const verticalPost = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.40, 16), brushedAlumMat);
-            verticalPost.position.set(armX, deskH + 0.22, armZ);
-            verticalPost.castShadow = true;
-            deskGroup.add(verticalPost);
-
-            const lowerArm = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.036, 0.22), brushedAlumMat);
-            lowerArm.position.set(armX, deskH + 0.36, armZ + 0.10);
-            lowerArm.rotation.x = -0.18;
-            deskGroup.add(lowerArm);
-
-            const hingeJoint = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.05, 16), darkAlumMat);
-            hingeJoint.position.set(armX, deskH + 0.38, armZ + 0.20);
-            deskGroup.add(hingeJoint);
-
-            // 4. Primary 32-Inch Thin-Bezel Studio Monitor
+            // 3-5. iMac-style all-in-one + matching second display (silver aluminum, white bezel)
+            const macSilverMat = new THREE.MeshStandardMaterial({ color: '#D5D8DC', roughness: 0.3, metalness: 0.55 });
+            const macWhiteMat = new THREE.MeshStandardMaterial({ color: '#F5F5F3', roughness: 0.35, metalness: 0.0 });
+            const macBlackMat = new THREE.MeshStandardMaterial({ color: '#0E0E10', roughness: 0.3 });
+            const armX = deskX - 0.06;                     // horizontal centre of the main display
             const bezelW = 1.24;
             const bezelH = 0.70;
-            const monY = deskH + 0.53;
+            const monY = deskH + 0.53;                     // screen centre
             const monZ = deskZ - 0.14;
+            const CHIN = 0.13;
 
-            const monitorChassis = new THREE.Mesh(new THREE.BoxGeometry(bezelW, bezelH, 0.026), darkAlumMat);
-            monitorChassis.position.set(armX, monY, monZ);
-            monitorChassis.castShadow = true;
-            deskGroup.add(monitorChassis);
-
-            const chinBar = new THREE.Mesh(new THREE.BoxGeometry(bezelW, 0.030, 0.028), brushedAlumMat);
-            chinBar.position.set(armX, monY - bezelH / 2 + 0.015, monZ + 0.001);
-            deskGroup.add(chinBar);
+            // Body: thin silver slab with the coloured "chin" below the screen
+            const imacBody = new THREE.Mesh(new THREE.BoxGeometry(bezelW + 0.04, bezelH + 0.04 + CHIN, 0.022), macSilverMat);
+            imacBody.position.set(armX, monY - CHIN / 2, monZ);
+            imacBody.castShadow = true;
+            deskGroup.add(imacBody);
+            // White front bezel around the screen
+            const imacBezel = new THREE.Mesh(new THREE.PlaneGeometry(bezelW + 0.03, bezelH + 0.03), macWhiteMat);
+            imacBezel.position.set(armX, monY + 0.01, monZ + 0.0115);
+            deskGroup.add(imacBezel);
+            const imacBlackEdge = new THREE.Mesh(new THREE.PlaneGeometry(bezelW - 0.018, bezelH - 0.036), macBlackMat);
+            imacBlackEdge.position.set(armX, monY + 0.01, monZ + 0.012);
+            deskGroup.add(imacBlackEdge);
+            // Aluminium stand: angled plate + flat foot
+            const standPlate = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.42, 0.012), macSilverMat);
+            standPlate.position.set(armX, deskH + 0.2, monZ - 0.09);
+            standPlate.rotation.x = -0.32;
+            standPlate.castShadow = true;
+            deskGroup.add(standPlate);
+            const standFoot = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.008, 0.2), macSilverMat);
+            standFoot.position.set(armX, deskH + 0.004, monZ - 0.1);
+            deskGroup.add(standFoot);
 
             monitorCanvas = document.createElement('canvas');
             monitorCanvas.width = 1024;
@@ -1727,7 +1724,7 @@
                 new THREE.PlaneGeometry(bezelW - 0.030, bezelH - 0.048),
                 new THREE.MeshBasicMaterial({ map: monitorTexture })
             );
-            screenMesh.position.set(armX, monY + 0.01, monZ + 0.015);
+            screenMesh.position.set(armX, monY + 0.01, monZ + 0.0125);
 
             screenMesh.userData = {
                 type: 'monitor',
@@ -1738,26 +1735,28 @@
                 focusPos: new THREE.Vector3(deskX - 0.04, deskH + 0.54, deskZ + 1.40),
                 focusTarget: new THREE.Vector3(deskX - 0.04, deskH + 0.48, deskZ - 0.10)
             };
-            monitorChassis.userData = screenMesh.userData;
+            imacBody.userData = screenMesh.userData;
             interactiveObjects.push(screenMesh);
             deskGroup.add(screenMesh);
 
-            // 5. Vertical Secondary Reference Monitor (AWS CloudWatch & API Workflow)
+            // Secondary portrait display in matching silver with a slim stand
             const subW = 0.38;
             const subH = 0.62;
             const subX = deskX + 0.76;
             const subY = deskH + 0.47;
             const subZ = deskZ - 0.08;
 
-            const subStand = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.32, 0.038), darkAlumMat);
-            subStand.position.set(subX, deskH + 0.17, subZ - 0.03);
+            const subStand = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.32, 0.01), macSilverMat);
+            subStand.position.set(subX + 0.01, deskH + 0.16, subZ - 0.06);
+            subStand.rotation.set(-0.25, -0.24, 0);
             deskGroup.add(subStand);
 
-            const subBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.014, 0.16), brushedAlumMat);
-            subBase.position.set(subX, deskH + 0.028, subZ - 0.02);
+            const subBase = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.008, 0.15), macSilverMat);
+            subBase.position.set(subX + 0.01, deskH + 0.004, subZ - 0.06);
+            subBase.rotation.y = -0.24;
             deskGroup.add(subBase);
 
-            const subChassis = new THREE.Mesh(new THREE.BoxGeometry(subW, subH, 0.024), darkAlumMat);
+            const subChassis = new THREE.Mesh(new THREE.BoxGeometry(subW + 0.02, subH + 0.02, 0.02), macSilverMat);
             subChassis.position.set(subX, subY, subZ);
             subChassis.rotation.y = -0.24;
             subChassis.castShadow = true;
@@ -1773,58 +1772,45 @@
                 new THREE.PlaneGeometry(subW - 0.022, subH - 0.022),
                 new THREE.MeshBasicMaterial({ map: subMonitorTexture })
             );
-            subScreen.position.set(subX - 0.003, subY, subZ + 0.013);
+            subScreen.position.set(subX - 0.003, subY, subZ + 0.0115);
             subScreen.rotation.y = -0.24;
             subScreen.userData = screenMesh.userData;
             interactiveObjects.push(subScreen);
             deskGroup.add(subScreen);
 
-            // 6. Compact 75% Aluminum Mechanical Keyboard + Braided USB-C Cable
+            // 6. Slim wireless keyboard: silver wedge with white keys
             const kbX = deskX - 0.12;
             const kbZ = deskZ + 0.16;
-            const kbTex = createKeyboardTexture();
-            const kbMaterials = [
-                brushedAlumMat,
-                brushedAlumMat,
-                new THREE.MeshStandardMaterial({ map: kbTex, roughness: 0.45 }),
-                darkAlumMat,
-                brushedAlumMat,
-                brushedAlumMat
-            ];
-            const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.022, 0.20), kbMaterials);
-            keyboard.position.set(kbX, deskH + 0.039, kbZ);
-            keyboard.rotation.x = 0.05;
+            const keyCanvas = document.createElement('canvas'); keyCanvas.width = 512; keyCanvas.height = 160;
+            const kc = keyCanvas.getContext('2d');
+            kc.fillStyle = '#C9CCD0'; kc.fillRect(0, 0, 512, 160);
+            const rowsK = [14, 14, 13, 12, 11];
+            rowsK.forEach((n, r) => {
+                const kw = (512 - 16) / 14.6;
+                let x = 8 + (14 - n) * kw * 0.5;
+                for (let i = 0; i < n; i++) {
+                    const w = (r === 4 && i === Math.floor(n / 2)) ? kw * 4 : kw - 3;
+                    kc.fillStyle = '#FBFBFA';
+                    kc.fillRect(x, 8 + r * 29, w, 25);
+                    x += (r === 4 && i === Math.floor(n / 2)) ? kw * 4 + 3 : kw;
+                }
+            });
+            const keyTex = new THREE.CanvasTexture(keyCanvas); keyTex.encoding = THREE.sRGBEncoding;
+            const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.01, 0.13),
+                [macSilverMat, macSilverMat, new THREE.MeshStandardMaterial({ map: keyTex, roughness: 0.4 }), macSilverMat, macSilverMat, macSilverMat]);
+            keyboard.position.set(kbX, deskH + 0.034, kbZ);
+            keyboard.rotation.x = 0.04;
             keyboard.castShadow = true;
             deskGroup.add(keyboard);
 
-            const underglow = new THREE.Mesh(
-                new THREE.PlaneGeometry(0.48, 0.18),
-                new THREE.MeshBasicMaterial({ color: '#FDE68A', transparent: true, opacity: 0.35 })
-            );
-            underglow.rotation.x = -Math.PI / 2;
-            underglow.position.set(kbX, deskH + 0.029, kbZ);
-            deskGroup.add(underglow);
-
-            const cableCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(kbX - 0.15, deskH + 0.036, kbZ - 0.09),
-                new THREE.Vector3(kbX - 0.17, deskH + 0.030, kbZ - 0.21),
-                new THREE.Vector3(kbX - 0.11, deskH + 0.026, kbZ - 0.33)
-            ]);
-            const cableMesh = new THREE.Mesh(new THREE.TubeGeometry(cableCurve, 16, 0.0045, 8, false), matteBlackMat);
-            deskGroup.add(cableMesh);
-
-            // 7. Ergonomic Sculpted Wireless Mouse
+            // 7. Slim white wireless mouse
             const mouseX = deskX + 0.28;
             const mouseZ = deskZ + 0.17;
-            const mouseBody = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.035, 0.16), darkAlumMat);
-            mouseBody.position.set(mouseX, deskH + 0.044, mouseZ);
+            const mouseBody = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), macWhiteMat);
+            mouseBody.scale.set(0.032, 0.013, 0.058);
+            mouseBody.position.set(mouseX, deskH + 0.03, mouseZ);
             mouseBody.castShadow = true;
             deskGroup.add(mouseBody);
-
-            const scrollWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.014, 12), brushedAlumMat);
-            scrollWheel.rotation.z = Math.PI / 2;
-            scrollWheel.position.set(mouseX, deskH + 0.061, mouseZ - 0.036);
-            deskGroup.add(scrollWheel);
 
             // 8. Pair of Minimalist Matte-Black Studio Monitor Speakers
             [-0.84, 0.98].forEach((offsetX, idx) => {
@@ -1882,52 +1868,8 @@
             lampShade.rotation.z = -0.55;
             deskGroup.add(lampShade);
 
-            // 10. Aluminum & Tempered Glass Workstation PC Tower (Under Right Side of Desk)
-            const towerX = deskX + 0.78;
-            const towerZ = deskZ + 0.02;
-            const towerW = 0.24;
-            const towerH = 0.48;
-            const towerD = 0.46;
-
-            const towerBody = new THREE.Mesh(new THREE.BoxGeometry(towerW, towerH, towerD), darkAlumMat);
-            towerBody.position.set(towerX, towerH / 2 + 0.01, towerZ);
-            towerBody.castShadow = true;
-            deskGroup.add(towerBody);
-
-            const frontPanel = new THREE.Mesh(new THREE.BoxGeometry(towerW - 0.02, towerH - 0.02, 0.018), brushedAlumMat);
-            frontPanel.position.set(towerX, towerH / 2 + 0.01, towerZ + towerD / 2 + 0.008);
-            deskGroup.add(frontPanel);
-
-            // Tempered glass left side panel with spinning warm amber cooling fans
-            const glassPanel = new THREE.Mesh(
-                new THREE.PlaneGeometry(towerD - 0.05, towerH - 0.06),
-                new THREE.MeshStandardMaterial({
-                    color: '#18181B',
-                    roughness: 0.1,
-                    metalness: 0.2,
-                    transparent: true,
-                    opacity: 0.55
-                })
-            );
-            glassPanel.rotation.y = -Math.PI / 2;
-            glassPanel.position.set(towerX - towerW / 2 - 0.002, towerH / 2 + 0.01, towerZ);
-            deskGroup.add(glassPanel);
-
+            // No tower: the all-in-one Mac replaces the PC
             pcFanMeshes = [];
-            [0.14, 0.34].forEach(fy => {
-                const fanRing = new THREE.Mesh(
-                    new THREE.TorusGeometry(0.055, 0.006, 10, 24),
-                    new THREE.MeshBasicMaterial({ color: '#F59E0B' })
-                );
-                fanRing.rotation.y = Math.PI / 2;
-                fanRing.position.set(towerX - towerW / 2 + 0.015, fy, towerZ + 0.08);
-                deskGroup.add(fanRing);
-
-                const fanBlades = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.09, 0.018), brushedAlumMat);
-                fanBlades.position.copy(fanRing.position);
-                deskGroup.add(fanBlades);
-                pcFanMeshes.push(fanBlades);
-            });
 
             scene.add(deskGroup);
         }
