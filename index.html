@@ -78,7 +78,7 @@
 
     <!-- Welcome Celebration Canvas & Architectural Greeting Banner -->
     <canvas id="welcome-petals-canvas" class="fixed inset-0 z-50 pointer-events-none hidden"></canvas>
-    <div id="welcome-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none hidden transition-all duration-700 opacity-0 -translate-y-3">
+    <div id="welcome-banner" class="fixed top-[42%] lg:top-20 w-[calc(100%-2rem)] sm:w-auto left-1/2 -translate-x-1/2 z-50 pointer-events-none hidden transition-all duration-700 opacity-0 -translate-y-3">
         <div class="bg-studioWall/95 backdrop-blur-md border border-oakWood/40 shadow-lg rounded-2xl px-6 py-3.5 text-center">
             <span class="block text-[10px] font-mono tracking-[0.28em] text-oakWood uppercase">[ STUDIO ARCHIVE // GREETING ]</span>
             <div class="text-lg sm:text-xl font-medium tracking-[0.22em] text-matteBlack mt-0.5">WELCOME</div>
@@ -516,7 +516,7 @@
             <div>
                 <div class="flex items-center justify-between pb-4 border-b border-subtleBorder">
                     <span id="drawer-tag" class="text-xs font-mono text-oakWood font-semibold tracking-wider">[ CASE STUDY ]</span>
-                    <button onclick="closeDetailDrawer()" class="px-3 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-xs font-medium text-matteBlack transition-colors">
+                    <button onclick="closeDetailDrawer()" class="shrink-0 whitespace-nowrap ml-3 px-3 py-1.5 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-xs font-medium text-matteBlack transition-colors">
                         [ 閉じる / Close ]
                     </button>
                 </div>
@@ -568,7 +568,7 @@
                     <span class="text-xs font-mono text-oakWood">[ STUDIO ARCHIVE INDEX ]</span>
                     <h2 class="text-lg font-medium text-matteBlack">左右壁掛け実績（全8作品）・中央本棚スキル一覧</h2>
                 </div>
-                <button onclick="closeDirectoryModal()" class="px-3 py-1 rounded bg-white border border-subtleBorder text-xs font-medium">[ Close ]</button>
+                <button onclick="closeDirectoryModal()" class="shrink-0 whitespace-nowrap px-3 py-1.5 rounded bg-white border border-subtleBorder text-xs font-medium">[ Close ]</button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -913,7 +913,7 @@
         function currentAspect() {
             return camera ? camera.aspect : (window.innerWidth / Math.max(1, window.innerHeight));
         }
-        function fitView(pos, target, outPos, outTarget, maxK = 2.2, ref = 1.3) {
+        function fitView(pos, target, outPos, outTarget, maxK = 1.75, ref = 1.3) {
             const k = Math.min(maxK, Math.max(1, ref / currentAspect()));
             outTarget.copy(target);
             outPos.copy(target).add(pos.clone().sub(target).multiplyScalar(k));
@@ -1035,6 +1035,10 @@
             mouse = new THREE.Vector2(-99, -99);
 
             renderer.domElement.addEventListener('pointermove', onPointerMove);
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                pointerDownPos = { x: e.clientX, y: e.clientY };
+                lastPointerType = e.pointerType || 'mouse';
+            });
             renderer.domElement.addEventListener('click', onCanvasClick);
             window.addEventListener('resize', onWindowResize);
 
@@ -2176,9 +2180,14 @@
 
                 document.body.style.cursor = 'pointer';
                 if (tooltip && tooltipCat && tooltipTitle) {
-                    tooltip.classList.remove('hidden');
-                    tooltip.style.left = `${event.clientX + 14}px`;
-                    tooltip.style.top = `${event.clientY + 14}px`;
+                    if (event.pointerType && event.pointerType !== 'mouse') {
+                        tooltip.classList.add('hidden');
+                    } else {
+                        tooltip.classList.remove('hidden');
+                        const tw = tooltip.offsetWidth || 220, th = tooltip.offsetHeight || 60;
+                        tooltip.style.left = `${Math.max(8, Math.min(event.clientX + 14, window.innerWidth - tw - 8))}px`;
+                        tooltip.style.top = `${Math.max(8, Math.min(event.clientY + 14, window.innerHeight - th - 8))}px`;
+                    }
 
                     if (hit.userData.type === 'project') {
                         tooltipCat.textContent = hit.userData.data.tag;
@@ -2206,7 +2215,17 @@
             }
         }
 
-        function onCanvasClick() {
+        let pointerDownPos = null;
+        let lastPointerType = 'mouse';
+        function onCanvasClick(event) {
+            // Ignore the click that ends a drag (orbiting the camera)
+            if (pointerDownPos && event && Math.hypot(event.clientX - pointerDownPos.x, event.clientY - pointerDownPos.y) > 8) return;
+            // Touch taps have no hover beforehand: pick the object under the tap point
+            if (event) onPointerMove(event);
+            if (lastPointerType !== 'mouse') {
+                const tip = document.getElementById('hover-tooltip');
+                if (tip) tip.classList.add('hidden');
+            }
             if (!hoveredObject) return;
             selectedObject = hoveredObject;
 
