@@ -1046,37 +1046,49 @@
         }
 
         function buildStudioArchitecture() {
-            const floorGeo = new THREE.PlaneGeometry(18, 14);
+            // Room bounds (compact: walls just outside the wall galleries)
+            const ROOM = { left: -2.5, right: 5.46, back: -2.05, front: 2.1 };
+            const roomW = ROOM.right - ROOM.left, roomCX = (ROOM.left + ROOM.right) / 2;
+            const sideLen = ROOM.front - ROOM.back, sideCZ = (ROOM.front + ROOM.back) / 2;
+
+            const floorGeo = new THREE.PlaneGeometry(roomW + 0.3, 8);
             const floorMat = new THREE.MeshStandardMaterial({ color: '#EAE6DF', roughness: 0.85, metalness: 0.02 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
+            floor.position.set(roomCX, 0, ROOM.back + 4);
             floor.receiveShadow = true;
             scene.add(floor);
 
-            const gridHelper = new THREE.GridHelper(16, 32, 0xd6d1c7, 0xe0dcd3);
-            gridHelper.position.y = 0.002;
+            const gridHelper = new THREE.GridHelper(roomW, 16, 0xd6d1c7, 0xe0dcd3);
+            gridHelper.scale.z = sideLen / roomW;
+            gridHelper.position.set(roomCX, 0.002, sideCZ);
             scene.add(gridHelper);
 
             const wallMat = new THREE.MeshStandardMaterial({ color: '#F8F7F4', roughness: 0.92 });
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(12.5, 4.8, 0.25), wallMat);
-            backWall.position.set(1.48, 2.4, -2.05);
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomW + 0.25, 4.8, 0.25), wallMat);
+            backWall.position.set(roomCX, 2.4, ROOM.back);
             backWall.receiveShadow = true;
             scene.add(backWall);
 
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, 6.5), wallMat);
-            leftWall.position.set(-4.65, 2.4, 1.0);
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, sideLen), wallMat);
+            leftWall.position.set(ROOM.left, 2.4, sideCZ);
             leftWall.receiveShadow = true;
             scene.add(leftWall);
 
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, 6.5), wallMat);
-            rightWall.position.set(7.60, 2.4, 1.0);
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, sideLen), wallMat);
+            rightWall.position.set(ROOM.right, 2.4, sideCZ);
             rightWall.receiveShadow = true;
             scene.add(rightWall);
 
             const trimMat = new THREE.MeshStandardMaterial({ color: '#D6D1C7', roughness: 0.7 });
-            const backTrim = new THREE.Mesh(new THREE.BoxGeometry(12.3, 0.12, 0.04), trimMat);
-            backTrim.position.set(1.48, 0.06, -1.91);
+            const backTrim = new THREE.Mesh(new THREE.BoxGeometry(roomW - 0.25, 0.12, 0.04), trimMat);
+            backTrim.position.set(roomCX, 0.06, -1.91);
             scene.add(backTrim);
+            [ROOM.left + 0.145, ROOM.right - 0.145].forEach(x => {
+                const t = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, sideLen - 0.13), trimMat);
+                t.position.set(x, 0.06, sideCZ + 0.065);
+                scene.add(t);
+            });
 
             // --- Decorative accent lines (amber / terracotta / sage) ---
             const ACCENTS = [
@@ -1090,18 +1102,18 @@
             const bandY = 1.08;
             ACCENTS.forEach((a, i) => {
                 const y = bandY - i * 0.05;
-                const back = new THREE.Mesh(new THREE.BoxGeometry(12.3, a.h, 0.012), accentMats[i]);
-                back.position.set(1.48, y, -1.918);
+                const back = new THREE.Mesh(new THREE.BoxGeometry(roomW - 0.25, a.h, 0.012), accentMats[i]);
+                back.position.set(roomCX, y, -1.918);
                 scene.add(back);
-                [[-4.518, 1], [7.468, -1]].forEach(([x]) => {
-                    const side = new THREE.Mesh(new THREE.BoxGeometry(0.012, a.h, 6.3), accentMats[i]);
-                    side.position.set(x, y, 1.0);
+                [ROOM.left + 0.132, ROOM.right - 0.132].forEach((x) => {
+                    const side = new THREE.Mesh(new THREE.BoxGeometry(0.012, a.h, sideLen - 0.13), accentMats[i]);
+                    side.position.set(x, y, sideCZ + 0.065);
                     scene.add(side);
                 });
             });
             // Thin amber line on top of the baseboard
-            const baseLine = new THREE.Mesh(new THREE.BoxGeometry(12.3, 0.01, 0.045), accentMats[0]);
-            baseLine.position.set(1.48, 0.125, -1.905);
+            const baseLine = new THREE.Mesh(new THREE.BoxGeometry(roomW - 0.25, 0.01, 0.045), accentMats[0]);
+            baseLine.position.set(roomCX, 0.125, -1.905);
             scene.add(baseLine);
 
             // Floor: nested rectangle outlines framing the work area like an inlaid rug
