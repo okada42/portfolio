@@ -1381,6 +1381,61 @@
             const frameMat = new THREE.MeshStandardMaterial({ color: '#C9A13B', roughness: 0.32, metalness: 0.55, emissive: '#3a2a08', emissiveIntensity: 0.35 }); // gold frames
             const matteMat = new THREE.MeshStandardMaterial({ color: '#FAF9F6', roughness: 0.85 });
 
+            // --- Japanese-inspired frame ornament (shared textures/materials) ---
+            const makeAsanohaTexture = () => {
+                // Asanoha (hemp-leaf) lattice pressed into the gold
+                const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
+                const g = cv.getContext('2d');
+                g.fillStyle = '#C9A13B'; g.fillRect(0, 0, 256, 256);
+                g.strokeStyle = 'rgba(110, 78, 18, 0.55)'; g.lineWidth = 2.2;
+                const R = 64 / Math.sqrt(3);
+                const star = (cx, cy) => {
+                    for (let k = 0; k < 6; k++) {
+                        const a = k * Math.PI / 3 + Math.PI / 6;
+                        const vx = cx + Math.cos(a) * R, vy = cy + Math.sin(a) * R;
+                        g.beginPath(); g.moveTo(cx, cy); g.lineTo(vx, vy); g.stroke();
+                        const a2 = k * Math.PI / 3, ex = cx + Math.cos(a2) * R * 1.15, ey = cy + Math.sin(a2) * R * 1.15;
+                        const an = (k - 1) * Math.PI / 3 + Math.PI / 6;
+                        g.beginPath(); g.moveTo(cx + Math.cos(an) * R, cy + Math.sin(an) * R); g.lineTo(ex, ey); g.lineTo(vx, vy); g.stroke();
+                    }
+                };
+                for (let yy = -1; yy <= 5; yy++) for (let xx = -1; xx <= 5; xx++) star(xx * 64 + (yy % 2 ? 32 : 0), yy * 55.4);
+                const grad = g.createLinearGradient(0, 0, 256, 256);
+                grad.addColorStop(0, 'rgba(255,240,190,0.18)'); grad.addColorStop(0.5, 'rgba(255,255,255,0)'); grad.addColorStop(1, 'rgba(255,240,190,0.12)');
+                g.fillStyle = grad; g.fillRect(0, 0, 256, 256);
+                const tex = new THREE.CanvasTexture(cv);
+                tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(5, 3.6);
+                tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+                return tex;
+            };
+            const makeKamonTexture = () => {
+                // Small sakura crest: gold disc, lacquer ring, five-petal blossom
+                const cv = document.createElement('canvas'); cv.width = 128; cv.height = 128;
+                const g = cv.getContext('2d');
+                g.fillStyle = '#C9A13B'; g.beginPath(); g.arc(64, 64, 63, 0, Math.PI * 2); g.fill();
+                g.strokeStyle = '#1B1210'; g.lineWidth = 7; g.beginPath(); g.arc(64, 64, 54, 0, Math.PI * 2); g.stroke();
+                g.fillStyle = '#1B1210';
+                for (let k = 0; k < 5; k++) {
+                    const a = -Math.PI / 2 + k * Math.PI * 2 / 5;
+                    g.beginPath(); g.ellipse(64 + Math.cos(a) * 20, 64 + Math.sin(a) * 20, 13, 17, a + Math.PI / 2, 0, Math.PI * 2); g.fill();
+                }
+                g.fillStyle = '#E8C766'; g.beginPath(); g.arc(64, 64, 7, 0, Math.PI * 2); g.fill();
+                const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
+                return tex;
+            };
+            const asanohaMat = new THREE.MeshStandardMaterial({ map: makeAsanohaTexture(), roughness: 0.35, metalness: 0.5, emissive: '#3a2a08', emissiveIntensity: 0.3 });
+            const outerFrameMats = [frameMat, frameMat, frameMat, frameMat, asanohaMat, frameMat];
+            const lacquerMat = new THREE.MeshStandardMaterial({ color: '#1B1210', roughness: 0.25, metalness: 0.1 });
+            const kanaguMat = new THREE.MeshStandardMaterial({ color: '#B48A2A', roughness: 0.28, metalness: 0.7, emissive: '#2a1d05', emissiveIntensity: 0.3 });
+            const kamonMat = new THREE.MeshStandardMaterial({ map: makeKamonTexture(), roughness: 0.3, metalness: 0.4, transparent: true });
+            const FW = 1.0, FH = 0.72;   // outer frame size (wider border to carry the ornament)
+            const lacquerGeo = new THREE.BoxGeometry(0.905, 0.635, 0.006);
+            const beadGeo = new THREE.BoxGeometry(0.874, 0.604, 0.004);
+            const kanaguLongGeo = new THREE.BoxGeometry(0.13, 0.026, 0.006);
+            const kanaguShortGeo = new THREE.BoxGeometry(0.026, 0.13, 0.006);
+            const studGeo = new THREE.SphereGeometry(0.011, 12, 8);
+            const kamonGeo = new THREE.CircleGeometry(0.042, 32);
+
             projectsData.forEach((proj, idx) => {
                 const pos = framePositions[idx];
                 if (!pos) return;
@@ -1390,13 +1445,28 @@
                 frameGroup.scale.setScalar(0.68);
 
                 // Refined Smaller Matte Black Outer Frame (0.94m x 0.66m x 0.045m)
-                const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.66, 0.045), frameMat);
+                const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(FW, FH, 0.045), outerFrameMats);
                 outerFrame.castShadow = true;
                 frameGroup.add(outerFrame);
 
+                // Black lacquer (urushi) band + fine gold bead inside the gold border
+                const lacquer = new THREE.Mesh(lacquerGeo, lacquerMat); lacquer.position.z = 0.0245; frameGroup.add(lacquer);
+                const bead = new THREE.Mesh(beadGeo, frameMat); bead.position.z = 0.0275; frameGroup.add(bead);
+
+                // Sumi-kanagu: L-shaped metal corner fittings with a stud
+                [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(([sx, sy]) => {
+                    const cx = sx * (FW / 2 - 0.013), cy = sy * (FH / 2 - 0.013);
+                    const a = new THREE.Mesh(kanaguLongGeo, kanaguMat); a.position.set(cx - sx * 0.052, cy, 0.0255); frameGroup.add(a);
+                    const b = new THREE.Mesh(kanaguShortGeo, kanaguMat); b.position.set(cx, cy - sy * 0.052, 0.0255); frameGroup.add(b);
+                    const stud = new THREE.Mesh(studGeo, kanaguMat); stud.position.set(cx - sx * 0.006, cy - sy * 0.006, 0.029); stud.scale.z = 0.6; frameGroup.add(stud);
+                });
+
+                // Kamon-style sakura crest at the top centre of the border
+                const kamon = new THREE.Mesh(kamonGeo, kamonMat); kamon.position.set(0, FH / 2 - 0.018, 0.0262); frameGroup.add(kamon);
+
                 // Inner Architectural Gallery Matte Border (0.86m x 0.59m)
                 const innerMatte = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.59, 0.008), matteMat);
-                innerMatte.position.z = 0.022;
+                innerMatte.position.z = 0.028;
                 frameGroup.add(innerMatte);
 
                 // Canvas Print Surface (0.80m x 0.54m)
@@ -1405,7 +1475,7 @@
                     new THREE.PlaneGeometry(0.80, 0.54),
                     new THREE.MeshStandardMaterial({ map: artTex, roughness: 0.4 })
                 );
-                artMesh.position.z = 0.027;
+                artMesh.position.z = 0.0325;
 
                 artMesh.userData = {
                     type: 'project',
