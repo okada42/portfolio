@@ -904,18 +904,32 @@
         let targetCamPos = HAS_THREE ? defaultCamPos.clone() : null;
         let targetLookAt = HAS_THREE ? defaultTargetPos.clone() : null;
 
-        // Responsive framing: the scene is composed for wide screens, so on narrow/portrait
-        // screens the camera backs off along its view direction (and the default view shifts
-        // left so the developer character stays in frame).
-        // Phone framing (t = 1): camera distance multiplier and target shift
-        const PHONE_VIEW = { k: 1.9, sx: -0.38, sy: 0.32 };
+        // Closed room: the camera always stays inside these bounds, so nothing outside is ever visible.
+        const STUDIO_ROOM = { left: -2.5, right: 5.46, back: -2.05, front: 6.4, height: 4.8 };
+        const CAM_MARGIN = 0.35;
+
+        // Responsive framing: narrow/portrait screens get a wider lens (vertical FOV grows so the
+        // horizontal view stays wide) instead of pulling the camera back out of the room.
+        // Phone framing (t = 1): small distance multiplier and target shift
+        const PHONE_VIEW = { k: 1.1, sx: -0.38, sy: 0.32 };
+        const BASE_FOV = 42;
+        function fovForAspect(a) {
+            const f = Math.min(1.75, Math.max(1, 1.3 / a));
+            return THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV / 2)) * f));
+        }
+        function clampToRoom(v) {
+            v.x = Math.min(STUDIO_ROOM.right - CAM_MARGIN, Math.max(STUDIO_ROOM.left + CAM_MARGIN, v.x));
+            v.y = Math.min(STUDIO_ROOM.height - CAM_MARGIN, Math.max(0.3, v.y));
+            v.z = Math.min(STUDIO_ROOM.front - CAM_MARGIN, Math.max(STUDIO_ROOM.back + CAM_MARGIN, v.z));
+            return v;
+        }
         function currentAspect() {
             return camera ? camera.aspect : (window.innerWidth / Math.max(1, window.innerHeight));
         }
-        function fitView(pos, target, outPos, outTarget, maxK = 1.75, ref = 1.3) {
+        function fitView(pos, target, outPos, outTarget, maxK = 1.15, ref = 1.3) {
             const k = Math.min(maxK, Math.max(1, ref / currentAspect()));
             outTarget.copy(target);
-            outPos.copy(target).add(pos.clone().sub(target).multiplyScalar(k));
+            clampToRoom(outPos.copy(target).add(pos.clone().sub(target).multiplyScalar(k)));
         }
         function getDefaultView(outPos, outTarget) {
             const a = currentAspect();
@@ -923,7 +937,7 @@
             const shift = new THREE.Vector3(PHONE_VIEW.sx * t, PHONE_VIEW.sy * t, 0);
             const k = 1 + (PHONE_VIEW.k - 1) * t;
             outTarget.copy(defaultTargetPos).add(shift);
-            outPos.copy(defaultCamPos).add(shift).sub(outTarget).multiplyScalar(k).add(outTarget);
+            clampToRoom(outPos.copy(defaultCamPos).add(shift).sub(outTarget).multiplyScalar(k).add(outTarget));
         }
 
         // Monitor screen dynamic canvas textures
@@ -950,7 +964,7 @@
             const width = container.clientWidth || window.innerWidth;
             const height = container.clientHeight || (window.innerHeight - 64);
 
-            camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+            camera = new THREE.PerspectiveCamera(fovForAspect(width / height), width / height, 0.05, 40);
             getDefaultView(targetCamPos, targetLookAt);
             camera.position.copy(targetCamPos);
 
@@ -969,11 +983,13 @@
             controls.target.copy(targetLookAt);
             controls.enableDamping = true;
             controls.dampingFactor = 0.06;
-            controls.minDistance = 1.1;
-            controls.maxDistance = 18.0;
-            controls.maxPolarAngle = Math.PI / 2 - 0.03;
-            controls.minAzimuthAngle = -Math.PI / 2.2;
-            controls.maxAzimuthAngle = Math.PI / 2.2;
+            controls.minDistance = 0.8;
+            controls.maxDistance = 7.2;
+            controls.minPolarAngle = 0.75;               // can't look straight down over the walls
+            controls.maxPolarAngle = Math.PI / 2 - 0.08; // can't drop below the floor
+            controls.enablePan = false;                  // panning could slide the view out of the room
+            controls.minAzimuthAngle = -0.65;
+            controls.maxAzimuthAngle = 0.65;
 
             controls.addEventListener('start', () => {
                 isCameraAnimating = false;
@@ -1046,15 +1062,15 @@
 
         function buildStudioArchitecture() {
             // Room bounds (compact: walls just outside the wall galleries)
-            const ROOM = { left: -2.5, right: 5.46, back: -2.05, front: 2.1 };
+            const ROOM = STUDIO_ROOM;
             const roomW = ROOM.right - ROOM.left, roomCX = (ROOM.left + ROOM.right) / 2;
             const sideLen = ROOM.front - ROOM.back, sideCZ = (ROOM.front + ROOM.back) / 2;
 
-            const floorGeo = new THREE.PlaneGeometry(roomW + 0.3, 8);
+            const floorGeo = new THREE.PlaneGeometry(roomW + 0.3, sideLen + 0.3);
             const floorMat = new THREE.MeshStandardMaterial({ color: '#EAE6DF', roughness: 0.85, metalness: 0.02 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
-            floor.position.set(roomCX, 0, ROOM.back + 4);
+            floor.position.set(roomCX, 0, sideCZ);
             floor.receiveShadow = true;
             scene.add(floor);
 
@@ -1078,6 +1094,16 @@
             rightWall.position.set(ROOM.right, 2.4, sideCZ);
             rightWall.receiveShadow = true;
             scene.add(rightWall);
+
+            // Front wall (behind the visitor) and ceiling close the room completely
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(roomW + 0.25, ROOM.height, 0.25), wallMat);
+            frontWall.position.set(roomCX, ROOM.height / 2, ROOM.front);
+            scene.add(frontWall);
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomW + 0.3, sideLen + 0.3),
+                new THREE.MeshStandardMaterial({ color: '#FBFAF7', roughness: 0.95 }));
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.set(roomCX, ROOM.height, sideCZ);
+            scene.add(ceiling);
 
             const trimMat = new THREE.MeshStandardMaterial({ color: '#D6D1C7', roughness: 0.7 });
             const backTrim = new THREE.Mesh(new THREE.BoxGeometry(roomW - 0.25, 0.12, 0.04), trimMat);
@@ -2367,6 +2393,7 @@
             const width = container.clientWidth || window.innerWidth;
             const height = container.clientHeight || (window.innerHeight - 64);
             camera.aspect = width / height;
+            camera.fov = fovForAspect(camera.aspect);
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
             if (!selectedObject) {
@@ -2488,7 +2515,10 @@
 
             updateMonitorCanvas();
 
-            if (controls) controls.update();
+            if (controls) {
+                controls.update();
+                if (camera) clampToRoom(camera.position);
+            }
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
             }
