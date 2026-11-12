@@ -2754,7 +2754,15 @@
                     }
                 }
 
-                characterRig.swivelGroup.rotation.y = greetBlend * Math.PI;           // swivel round to face the visitor
+                // Rest: chair angled ~15 deg to the left. Greeting: swivel to face wherever the visitor's camera is.
+                const REST_SWIVEL = THREE.MathUtils.degToRad(15);
+                const rootPos = new THREE.Vector3();
+                characterRig.rootGroup.getWorldPosition(rootPos);
+                const toCam = camera.position.clone().sub(rootPos);
+                const camAngle = Math.atan2(toCam.x, toCam.z);               // world heading toward the visitor
+                let delta = (camAngle - characterRig.rootGroup.rotation.y) - REST_SWIVEL;
+                delta = Math.atan2(Math.sin(delta), Math.cos(delta));          // shortest turn
+                characterRig.swivelGroup.rotation.y = REST_SWIVEL + greetBlend * delta;
                 characterRig.rootGroup.position.z = -0.3 + greetBlend * 0.32;    // roll the chair back first
                 characterRig.welcomeBadge.material.opacity = greetBlend;
                 characterRig.welcomeBadge.position.y = 1.42 + Math.sin(t * 2.0) * 0.015;
@@ -2854,6 +2862,23 @@
                         rig.bones.UpperArmL.quaternion.copy(rig.base.UpperArmL).slerp(ikL.q, work);
                         rig.bones.LowerArmL.quaternion.copy(rig.base.LowerArmL).slerp(
                             new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.3 - tap), work);
+                    }
+
+                    // Waving hand: fingers up, palm facing the visitor (instead of lying flat), with a gentle side-to-side wave
+                    const hand = rig.bones.FistR;
+                    if (hand && greetBlend > 0.001) {
+                        hand.parent.updateMatrixWorld(true);
+                        const hp = new THREE.Vector3(); hand.getWorldPosition(hp);
+                        const zAxis = camera.position.clone().sub(hp); zAxis.y = 0;   // palm (+z) toward the visitor
+                        if (zAxis.lengthSq() < 1e-6) zAxis.set(0, 0, 1);
+                        zAxis.normalize();
+                        const yAxis = new THREE.Vector3(0, -1, 0);                       // local +y down => fingers (-y) up
+                        const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
+                        const worldQ = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis));
+                        worldQ.premultiply(new THREE.Quaternion().setFromAxisAngle(zAxis, waveAngle * 0.9));
+                        hand.parent.getWorldQuaternion(pq);
+                        const localQ = pq.clone().invert().multiply(worldQ);
+                        hand.quaternion.copy(rig.base.FistR).slerp(localQ, greetBlend);
                     }
                 }
             }
