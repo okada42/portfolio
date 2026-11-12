@@ -891,10 +891,11 @@
 
         // Balanced architectural camera framing centered on desk + overhead bookshelf + symmetric left/right galleries
         let isCameraAnimating = false;
-        const defaultCamPos = new THREE.Vector3(1.48, 2.25, 4.95);
-        const defaultTargetPos = new THREE.Vector3(1.48, 1.55, -1.2);
-        let targetCamPos = defaultCamPos.clone();
-        let targetLookAt = defaultTargetPos.clone();
+        const HAS_THREE = typeof THREE !== 'undefined';
+        const defaultCamPos = HAS_THREE ? new THREE.Vector3(1.48, 2.25, 4.95) : null;
+        const defaultTargetPos = HAS_THREE ? new THREE.Vector3(1.48, 1.55, -1.2) : null;
+        let targetCamPos = HAS_THREE ? defaultCamPos.clone() : null;
+        let targetLookAt = HAS_THREE ? defaultTargetPos.clone() : null;
 
         // Monitor screen dynamic canvas textures
         let monitorCanvas, monitorCtx, monitorTexture;
@@ -2766,9 +2767,36 @@
             renderPetals();
         }
 
+        function showStudioFallback(reason) {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            container.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font:14px/1.7 Inter,sans-serif;color:#555">'
+                + '<div><div style="font-weight:600;color:#1A1A1A;margin-bottom:6px">3D studio could not start</div>'
+                + '<div>' + reason + '</div>'
+                + '<div style="margin-top:8px;font-size:12px;color:#888">Try enabling hardware acceleration in your browser settings, or open this page in another browser.</div></div></div>';
+        }
+
+        function webglAvailable() {
+            try {
+                const c = document.createElement('canvas');
+                return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
+            } catch (e) { return false; }
+        }
+
         window.onload = function () {
-            initThreeStudio();
-            checkAndTriggerWelcomeCelebration();
+            try {
+                if (typeof THREE === 'undefined') {
+                    showStudioFallback('The 3D library failed to load (network or content blocker).');
+                } else if (!webglAvailable()) {
+                    showStudioFallback('WebGL is not available in this browser.');
+                } else {
+                    initThreeStudio();
+                }
+            } catch (err) {
+                console.error('[studio] init failed:', err);
+                showStudioFallback('Error: ' + (err && err.message ? err.message : err));
+            }
+            try { checkAndTriggerWelcomeCelebration(); } catch (e) { console.error(e); }
         };
     </script>
 </body>
