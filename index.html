@@ -1,0 +1,2691 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Portfolio | Senior Engineer & UI/UX Designer (15+ Years)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js & OrbitControls via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Google Fonts: Inter & Noto Sans JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        studioWall: '#F8F7F4',
+                        studioWarm: '#EFECE6',
+                        oakWood: '#8B6F4E',
+                        walnutDark: '#4A3825',
+                        matteBlack: '#1A1A1A',
+                        inkGray: '#4A4945',
+                        subtleBorder: '#E2DFD7',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #F8F7F4;
+            color: #1A1A1A;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8F7F4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C9C4B9;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8B6F4E;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: grab;
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        .drawer-transition {
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+        }
+    </style>
+</head>
+<body class="bg-studioWall text-matteBlack antialiased selection:bg-oakWood selection:text-white">
+
+    <!-- Welcome Celebration Canvas & Architectural Greeting Banner -->
+    <canvas id="welcome-petals-canvas" class="fixed inset-0 z-50 pointer-events-none hidden"></canvas>
+    <div id="welcome-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none hidden transition-all duration-700 opacity-0 -translate-y-3">
+        <div class="bg-studioWall/95 backdrop-blur-md border border-oakWood/40 shadow-lg rounded-2xl px-6 py-3.5 text-center">
+            <span class="block text-[10px] font-mono tracking-[0.28em] text-oakWood uppercase">[ STUDIO ARCHIVE // GREETING ]</span>
+            <div class="text-lg sm:text-xl font-medium tracking-[0.22em] text-matteBlack mt-0.5">WELCOME</div>
+            <p class="text-[11px] text-inkGray mt-0.5">ポートフォリオをご覧いただきありがとうございます</p>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 z-40 bg-studioWall/90 backdrop-blur-md border-b border-subtleBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <button onclick="switchTab('studio')" class="text-left focus:outline-none group">
+                    <span class="block text-xs font-mono tracking-widest text-inkGray uppercase">[ 15+ YEARS ARCHITECTURE &amp; DESIGN ]</span>
+                    <span class="text-sm sm:text-base font-medium tracking-tight text-matteBlack group-hover:text-oakWood transition-colors">
+                        STUDIO ARCHIVE // Engineering &amp; Automation
+                    </span>
+                </button>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-1 bg-studioWarm/80 p-1 rounded-lg border border-subtleBorder">
+                <button id="nav-studio" onclick="switchTab('studio')" class="tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium transition-all bg-white text-matteBlack shadow-sm">
+                    [Studio 3D]
+                </button>
+                <button id="nav-automation" onclick="switchTab('automation')" class="tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium text-inkGray hover:text-matteBlack transition-all">
+                    [Automation Demo]
+                </button>
+                <button id="nav-career" onclick="switchTab('career')" class="tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium text-inkGray hover:text-matteBlack transition-all">
+                    [Career &amp; Profile]
+                </button>
+                <button id="nav-contact" onclick="switchTab('contact')" class="tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium text-inkGray hover:text-matteBlack transition-all">
+                    [Contact / Links]
+                </button>
+            </nav>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('contact')" class="px-4 py-2 rounded-lg bg-matteBlack hover:bg-oakWood text-white text-xs font-medium tracking-wide transition-colors">
+                    ▶ ご相談・お見積り
+                </button>
+            </div>
+        </div>
+
+        <div class="md:hidden flex items-center justify-around border-t border-subtleBorder bg-studioWarm/90 px-2 py-1.5 text-xs">
+            <button id="m-nav-studio" onclick="switchTab('studio')" class="px-2 py-1 rounded font-medium bg-white text-matteBlack shadow-sm">[Studio 3D]</button>
+            <button id="m-nav-automation" onclick="switchTab('automation')" class="px-2 py-1 rounded text-inkGray">[Automation]</button>
+            <button id="m-nav-career" onclick="switchTab('career')" class="px-2 py-1 rounded text-inkGray">[Career]</button>
+            <button id="m-nav-contact" onclick="switchTab('contact')" class="px-2 py-1 rounded text-inkGray">[Contact]</button>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: 3D ARCHITECTURAL STUDIO GALLERY (PRIMARY INTERACTIVE VIEW)    -->
+    <!-- ===================================================================== -->
+    <main id="view-studio" class="pt-24 md:pt-16 h-screen flex flex-col relative">
+        <div id="canvas-container" class="flex-1 w-full h-full"></div>
+
+        <!-- Hover Tooltip for 3D Objects -->
+        <div id="hover-tooltip" class="pointer-events-none fixed z-30 hidden bg-matteBlack/95 text-white px-3.5 py-2 rounded-lg shadow-lg border border-stone-700 text-xs max-w-xs">
+            <div id="tooltip-category" class="font-mono text-[10px] text-amber-200/90 uppercase tracking-wider mb-0.5">[ PROJECT FRAME ]</div>
+            <div id="tooltip-title" class="font-medium text-sm">Title</div>
+            <div id="tooltip-hint" class="text-[11px] text-stone-300 mt-0.5">▶ クリックして詳細を表示</div>
+        </div>
+
+        <!-- Studio Overlay: Top-Left Architectural Legend & Quick Focus Buttons -->
+        <div class="absolute top-28 md:top-20 left-4 sm:left-6 z-20 max-w-xs sm:max-w-sm pointer-events-auto">
+            <div class="bg-studioWall/92 backdrop-blur-md border border-subtleBorder rounded-xl p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-mono tracking-wider text-oakWood font-semibold uppercase">[ ARCHITECTURAL STUDIO ]</span>
+                    <button onclick="resetCameraView()" class="text-[11px] font-medium px-2.5 py-1 rounded bg-studioWarm hover:bg-subtleBorder text-matteBlack transition-colors border border-subtleBorder">
+                        ▶ Reset View
+                    </button>
+                </div>
+                <p class="text-xs text-inkGray leading-relaxed mb-3">
+                    デスク中央上の「スキル本棚」、左右の「壁掛け実績ギャラリー（全8作品）」、および「PCモニター」をクリックすると、詳細情報と業務成果をご確認いただけます。
+                </p>
+                <div class="flex flex-wrap gap-1.5 text-[11px]">
+                    <button onclick="focusZone('galleryLeft')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
+                        〇 左ギャラリー (4作)
+                    </button>
+                    <button onclick="focusZone('bookshelf')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
+                        〇 中央スキル本棚
+                    </button>
+                    <button onclick="focusZone('galleryRight')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
+                        〇 右ギャラリー (4作)
+                    </button>
+                    <button onclick="focusZone('monitor')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
+                        〇 PCワークステーション
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Studio Overlay: Bottom-Left Controls Hint -->
+        <div class="hidden sm:flex items-center space-x-4 absolute bottom-5 left-6 z-20 bg-studioWall/90 backdrop-blur-sm border border-subtleBorder px-4 py-2 rounded-lg text-[11px] text-inkGray">
+            <span>[操作ガイド]</span>
+            <span>〇 ドラッグ: 視点回転</span>
+            <span>〇 スクロール: ズーム</span>
+            <span>〇 クリック: 作品・書籍・挨拶再生</span>
+        </div>
+
+        <!-- Quick Index Drawer Trigger (Bottom Right) -->
+        <div class="absolute bottom-5 right-4 sm:right-6 z-20 flex space-x-2">
+            <button onclick="triggerDeveloperGreeting()" class="px-3.5 py-2.5 rounded-xl bg-studioWarm/95 hover:bg-white backdrop-blur-md border border-subtleBorder shadow-sm text-xs font-medium text-matteBlack transition-colors">
+                ▶ 挨拶を再生
+            </button>
+            <button onclick="openDirectoryModal()" class="px-4 py-2.5 rounded-xl bg-white/95 hover:bg-studioWarm backdrop-blur-md border border-subtleBorder shadow-sm text-xs font-medium text-matteBlack transition-colors">
+                [ 全8作品・書籍一覧 / Index ]
+            </button>
+        </div>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: BACKEND & PC TASK AUTOMATION SCREENING ROOM (2D INTERACTIVE)   -->
+    <!-- ===================================================================== -->
+    <section id="view-automation" class="hidden pt-28 md:pt-24 pb-20 px-4 sm:px-6 max-w-6xl mx-auto min-h-screen">
+        <div class="mb-10 border-b border-subtleBorder pb-6">
+            <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ WORKFLOW AUTOMATION SCREENING ROOM ]</span>
+            <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
+                PC業務自動化・AI連携 ライブデモンストレーション
+            </h1>
+            <p class="text-sm text-inkGray mt-2 max-w-3xl leading-relaxed">
+                「手作業のExcel集計・CSV加工・メール送信・Webデータ収集」などの反復業務を、Python・GAS・AI APIで自動化した実例シミュレーションです。導入前後の工数削減効果をリアルタイムでご確認いただけます。
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <button onclick="selectAutomationScenario(0)" id="scen-btn-0" class="scen-btn text-left p-4 rounded-xl border-2 border-matteBlack bg-white shadow-sm transition-all">
+                <div class="text-xs font-mono text-oakWood mb-1">[ CASE 01 // DATA PIPELINE ]</div>
+                <div class="font-medium text-sm text-matteBlack">大量CSV/Excel集計・DB自動同期</div>
+                <div class="text-xs text-inkGray mt-1">手作業 120分/日 → 自動化 3.8秒</div>
+            </button>
+            <button onclick="selectAutomationScenario(1)" id="scen-btn-1" class="scen-btn text-left p-4 rounded-xl border border-subtleBorder bg-studioWarm/50 hover:bg-white transition-all">
+                <div class="text-xs font-mono text-inkGray mb-1">[ CASE 02 // AI + EMAIL OPS ]</div>
+                <div class="font-medium text-sm text-matteBlack">問い合わせAI分類・見積ドラフト自動生成</div>
+                <div class="text-xs text-inkGray mt-1">手作業 45分/件 → 自動化 4.2秒</div>
+            </button>
+            <button onclick="selectAutomationScenario(2)" id="scen-btn-2" class="scen-btn text-left p-4 rounded-xl border border-subtleBorder bg-studioWarm/50 hover:bg-white transition-all">
+                <div class="text-xs font-mono text-inkGray mb-1">[ CASE 03 // AWS &amp; REPORT ]</div>
+                <div class="font-medium text-sm text-matteBlack">AWS監視ログ解析・週次レポート自動配信</div>
+                <div class="text-xs text-inkGray mt-1">手作業 180分/週 → 自動化 完全無人</div>
+            </button>
+        </div>
+
+        <div class="bg-white border border-subtleBorder rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-studioWarm px-6 py-4 border-b border-subtleBorder flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <span id="demo-case-tag" class="text-xs font-mono text-oakWood font-semibold">[ CASE 01 // PYTHON + POSTGRESQL + GOOGLE SHEETS API ]</span>
+                    <h2 id="demo-case-title" class="text-base sm:text-lg font-medium text-matteBlack mt-0.5">
+                        複数拠点の売上CSVデータクレンジング・異常値検知・DB一括登録
+                    </h2>
+                </div>
+                <button onclick="startScreeningDemo()" id="run-demo-btn" class="px-5 py-2.5 rounded-lg bg-matteBlack hover:bg-oakWood text-white text-xs font-medium tracking-wider transition-colors flex items-center space-x-2">
+                    <span>▶ 自動化プロセスを実行する</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-subtleBorder">
+                <div class="lg:col-span-5 p-6 bg-studioWall/50">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-2.5 py-1 rounded bg-stone-200 text-stone-700 text-xs font-mono font-medium">[ BEFORE: 従来の手動作業 ]</span>
+                        <span id="before-time" class="text-xs font-mono text-red-700 font-semibold">所要時間: 約120分 / 日</span>
+                    </div>
+                    <ul id="before-steps-list" class="space-y-3 text-xs text-inkGray leading-relaxed">
+                        <li class="p-3 rounded-lg bg-white border border-subtleBorder">
+                            <span class="font-medium text-matteBlack block mb-0.5">〇 1. 複数メール・フォルダからのファイル収集 (30分)</span>
+                            担当者ごとに異なるフォーマットのExcel/CSVを手動ダウンロード。
+                        </li>
+                        <li class="p-3 rounded-lg bg-white border border-subtleBorder">
+                            <span class="font-medium text-matteBlack block mb-0.5">〇 2. 目視での表記ゆれ修正・重複チェック (50分)</span>
+                            全角半角の統一、日付フォーマット修正、欠損データの確認作業。
+                        </li>
+                        <li class="p-3 rounded-lg bg-white border border-subtleBorder">
+                            <span class="font-medium text-matteBlack block mb-0.5">〇 3. 基幹システムへの転記と集計レポート作成 (40分)</span>
+                            コピー＆ペーストによる入力ミスのリスクと残業の常態化。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-7 p-6 bg-white flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-2.5 py-1 rounded bg-oakWood/15 text-oakWood text-xs font-mono font-medium">[ AFTER: Python / AI 自動実行パイプライン ]</span>
+                            <span id="after-time" class="text-xs font-mono text-emerald-700 font-semibold">処理時間: 3.8秒 (工数 99.9% 削減)</span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2.5 mb-4 text-xs">
+                            <div id="pipe-node-1" class="p-3 rounded-lg border border-subtleBorder bg-studioWall transition-all">
+                                <div class="font-mono text-[10px] text-inkGray">STEP 01</div>
+                                <div class="font-medium text-matteBlack mt-0.5">API自動取得</div>
+                                <div id="pipe-stat-1" class="text-[11px] text-inkGray mt-1">待機中</div>
+                            </div>
+                            <div id="pipe-node-2" class="p-3 rounded-lg border border-subtleBorder bg-studioWall transition-all">
+                                <div class="font-mono text-[10px] text-inkGray">STEP 02</div>
+                                <div class="font-medium text-matteBlack mt-0.5">検証・AI整形</div>
+                                <div id="pipe-stat-2" class="text-[11px] text-inkGray mt-1">待機中</div>
+                            </div>
+                            <div id="pipe-node-3" class="p-3 rounded-lg border border-subtleBorder bg-studioWall transition-all">
+                                <div class="font-mono text-[10px] text-inkGray">STEP 03</div>
+                                <div class="font-medium text-matteBlack mt-0.5">DB同期・通知</div>
+                                <div id="pipe-stat-3" class="text-[11px] text-inkGray mt-1">待機中</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-matteBlack text-stone-200 rounded-xl p-4 font-mono text-xs h-48 overflow-y-auto space-y-1.5" id="automation-terminal">
+                            <div class="text-stone-400">$ python3 automate_pipeline.py --mode=production</div>
+                            <div class="text-stone-400">[SYSTEM] Ready. 「▶ 自動化プロセスを実行する」ボタンを押して動作を確認してください。</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-subtleBorder flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="text-inkGray">導入効果: <strong class="text-matteBlack">月間約40時間の工数削減・ヒューマンエラーゼロ化</strong></span>
+                        <button onclick="switchTab('contact')" class="text-oakWood hover:underline font-medium">
+                            ▶ 同様の業務自動化を相談する
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: WORK EXPERIENCE & PROFILE (CLEAN JAPANESE EXECUTIVE LAYOUT)   -->
+    <!-- ===================================================================== -->
+    <section id="view-career" class="hidden pt-28 md:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
+        <div class="mb-10 border-b border-subtleBorder pb-6">
+            <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ CAREER &amp; PROFESSIONAL PROFILE ]</span>
+            <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
+                15年以上の開発・デザイン実績と支援領域
+            </h1>
+            <p class="text-sm text-inkGray mt-2 leading-relaxed">
+                Webアプリケーション開発・UI/UXデザインからAWSインフラ構築、AI・Pythonを活用した業務自動化まで、ビジネス成果から逆算した実用的なシステム設計を一貫してご提供します。
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div class="bg-white border border-subtleBorder rounded-xl p-5">
+                <div class="text-xs font-mono text-oakWood mb-1">[ EXPERIENCE ]</div>
+                <div class="text-2xl font-semibold text-matteBlack">15+ 年</div>
+                <div class="text-xs text-inkGray mt-1">システム開発・デザイン実務</div>
+            </div>
+            <div class="bg-white border border-subtleBorder rounded-xl p-5">
+                <div class="text-xs font-mono text-oakWood mb-1">[ CORE STACK ]</div>
+                <div class="text-2xl font-semibold text-matteBlack">Full-Stack</div>
+                <div class="text-xs text-inkGray mt-1">PHP / Python / AWS / Figma</div>
+            </div>
+            <div class="bg-white border border-subtleBorder rounded-xl p-5">
+                <div class="text-xs font-mono text-oakWood mb-1">[ AUTOMATION ]</div>
+                <div class="text-2xl font-semibold text-matteBlack">AI x DX</div>
+                <div class="text-xs text-inkGray mt-1">Claude Code / GAS / API連携</div>
+            </div>
+            <div class="bg-white border border-subtleBorder rounded-xl p-5">
+                <div class="text-xs font-mono text-oakWood mb-1">[ AVAILABILITY ]</div>
+                <div class="text-2xl font-semibold text-matteBlack">平日・土日</div>
+                <div class="text-xs text-inkGray mt-1">柔軟なスケジュール・迅速対応</div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-subtleBorder rounded-2xl p-6 sm:p-8 mb-12">
+            <h2 class="text-lg font-medium text-matteBlack mb-6 pb-3 border-b border-subtleBorder">
+                [ 主な支援領域と提供価値 ]
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div class="space-y-2">
+                    <div class="font-medium text-matteBlack">▶ Webシステム・予約/業務アプリ開発</div>
+                    <p class="text-xs text-inkGray leading-relaxed">
+                        〇 PHP (Laravel) / Python / React を用いた堅牢なWebシステム構築<br>
+                        〇 高負荷・同時アクセス時の排他制御やデータ整合性を重視したDB設計<br>
+                        〇 既存システムの改修、保守運用、長期的な機能拡張への対応
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <div class="font-medium text-matteBlack">▶ 業務プロセス自動化・AI活用支援</div>
+                    <p class="text-xs text-inkGray leading-relaxed">
+                        〇 Python / GAS を活用した定型業務・Excel/CSV集計の完全自動化<br>
+                        〇 複数SaaS・ツール（Gmail・スプレッドシート・各種API）のデータ連携<br>
+                        〇 生成AI（Claude等）を組み込んだ社内業務効率化ツールの構築
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <div class="font-medium text-matteBlack">▶ UI/UXデザイン・LP/Webサイト制作</div>
+                    <p class="text-xs text-inkGray leading-relaxed">
+                        〇 Figma / Photoshop / Illustrator を用いた洗練された画面設計<br>
+                        〇 開発前の1ページ・プロトタイプ提示による認識齟齬の防止<br>
+                        〇 ユーザーが迷わず成果につながる導線設計とレスポンシブ実装
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <div class="font-medium text-matteBlack">▶ AWSクラウドインフラ構築・運用保守</div>
+                    <p class="text-xs text-inkGray leading-relaxed">
+                        〇 EC2 / RDS / S3 / CloudWatch を用いた安定稼働環境の構築<br>
+                        〇 障害発生時のインフラ・アプリ両面からの迅速な原因切り分けと復旧<br>
+                        〇 IAMセキュリティ管理、バックアップ設計、AWS利用料金の最適化
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-subtleBorder rounded-2xl p-6 sm:p-8">
+            <h2 class="text-lg font-medium text-matteBlack mb-6 pb-3 border-b border-subtleBorder">
+                [ 経歴・プロジェクト実績タイムライン ]
+            </h2>
+            <div class="space-y-6 border-l-2 border-oakWood/40 ml-2 pl-6">
+                <div class="relative">
+                    <span class="w-3 h-3 rounded-full bg-oakWood absolute -left-[31px] top-1.5"></span>
+                    <div class="text-xs font-mono text-oakWood">2022 - PRESENT // INDEPENDENT LEAD ENGINEER &amp; DESIGNER</div>
+                    <h3 class="text-base font-medium text-matteBlack mt-1">AI連携・業務自動化・フルスタック開発支援</h3>
+                    <p class="text-xs text-inkGray mt-1.5 leading-relaxed">
+                        企業のDX推進パートナーとして、Python/GASによる業務自動化パイプライン構築、高負荷対応の予約管理システム開発、AWS本番環境の運用・コスト削減（平均25〜30%削減）、およびUI/UXリニューアルを多数統括。
+                    </p>
+                </div>
+                <div class="relative">
+                    <span class="w-3 h-3 rounded-full bg-stone-400 absolute -left-[31px] top-1.5"></span>
+                    <div class="text-xs font-mono text-inkGray">2016 - 2022 // SENIOR WEB APPLICATION ARCHITECT</div>
+                    <h3 class="text-base font-medium text-matteBlack mt-1">大規模Webサービス・クラウドインフラ設計構築</h3>
+                    <p class="text-xs text-inkGray mt-1.5 leading-relaxed">
+                        PHP (Laravel) および Python を中心とした業務基幹システム、BtoB/BtoCプラットフォームの設計から開発、AWS移行プロジェクトをリード。セキュリティ要件定義、データベース最適化、開発チームの標準化を推進。
+                    </p>
+                </div>
+                <div class="relative">
+                    <span class="w-3 h-3 rounded-full bg-stone-300 absolute -left-[31px] top-1.5"></span>
+                    <div class="text-xs font-mono text-inkGray">2010 - 2016 // WEB DEVELOPER &amp; UI DESIGNER</div>
+                    <h3 class="text-base font-medium text-matteBlack mt-1">Webサイト・UI/UXデザインおよびフロント/バックエンド開発</h3>
+                    <p class="text-xs text-inkGray mt-1.5 leading-relaxed">
+                        コーポレートサイト、ECサイト、WebアプリケーションのUIデザインからHTML/CSS/JavaScriptおよびPHPバックエンド実装まで一貫して担当。デザインとエンジニアリングの双方の視点を持つ基盤を確立。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 4: CONTACT & RECEPTION DESK (PLATFORM LINKS & DIRECT INQUIRY)    -->
+    <!-- ===================================================================== -->
+    <section id="view-contact" class="hidden pt-28 md:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
+        <div class="mb-10 border-b border-subtleBorder pb-6">
+            <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ RECEPTION DESK &amp; CONNECTIONS ]</span>
+            <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
+                お問い合わせ・各種プラットフォーム連携
+            </h1>
+            <p class="text-sm text-inkGray mt-2 leading-relaxed">
+                新規システム開発、業務自動化、AWS運用保守、UI/UXデザインのご相談など、お気軽にお問い合わせください。平日・土日を問わず迅速にご返信いたします。
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-4">
+                <div class="bg-white border border-subtleBorder rounded-2xl p-6">
+                    <h2 class="text-sm font-medium text-matteBlack mb-4">[ クラウドソーシング・外部プロフィール ]</h2>
+                    <div class="space-y-3 text-xs">
+                        <a href="https://www.lancers.jp/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-studioWall hover:bg-studioWarm border border-subtleBorder transition-colors group">
+                            <div>
+                                <div class="font-medium text-matteBlack group-hover:text-oakWood">Lancers (ランサーズ)</div>
+                                <div class="text-inkGray mt-0.5">法人案件・継続運用・システム開発のご依頼</div>
+                            </div>
+                            <span class="font-mono text-oakWood">▶ Open</span>
+                        </a>
+                        <a href="https://crowdworks.jp/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-studioWall hover:bg-studioWarm border border-subtleBorder transition-colors group">
+                            <div>
+                                <div class="font-medium text-matteBlack group-hover:text-oakWood">CrowdWorks (クラウドワークス)</div>
+                                <div class="text-inkGray mt-0.5">業務自動化・Webアプリ・AWS構築のご相談</div>
+                            </div>
+                            <span class="font-mono text-oakWood">▶ Open</span>
+                        </a>
+                        <a href="https://coconala.com/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-studioWall hover:bg-studioWarm border border-subtleBorder transition-colors group">
+                            <div>
+                                <div class="font-medium text-matteBlack group-hover:text-oakWood">coconala (ココナラ)</div>
+                                <div class="text-inkGray mt-0.5">スポット開発・自動化スクリプト・UI改善</div>
+                            </div>
+                            <span class="font-mono text-oakWood">▶ Open</span>
+                        </a>
+                        <a href="https://github.com/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-studioWall hover:bg-studioWarm border border-subtleBorder transition-colors group">
+                            <div>
+                                <div class="font-medium text-matteBlack group-hover:text-oakWood">GitHub</div>
+                                <div class="text-inkGray mt-0.5">コードサンプル・自動化ツール・技術検証</div>
+                            </div>
+                            <span class="font-mono text-oakWood">▶ Open</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-studioWarm/70 border border-subtleBorder rounded-2xl p-6 text-xs space-y-2">
+                    <div class="font-medium text-matteBlack">[ ご相談時の安心ポイント ]</div>
+                    <p class="text-inkGray leading-relaxed">
+                        〇 仕様が固まっていない段階からの整理・ご提案が可能です。<br>
+                        〇 デザイン案件では、ご希望に応じて1日以内に1ページ分のプロトタイプをご提示いたします。<br>
+                        〇 秘密保持契約（NDA）の締結にも柔軟に対応いたします。
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7">
+                <form onsubmit="submitInquiryForm(event)" class="bg-white border border-subtleBorder rounded-2xl p-6 sm:p-8 space-y-5 shadow-sm">
+                    <h2 class="text-base font-medium text-matteBlack border-b border-subtleBorder pb-3">
+                        [ 直接メッセージを送る ]
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-matteBlack mb-1.5">お名前 / 貴社名 <span class="text-oakWood">*</span></label>
+                            <input type="text" required placeholder="例: 株式会社〇〇 山田" class="w-full px-3.5 py-2.5 rounded-lg bg-studioWall border border-subtleBorder text-sm text-matteBlack focus:outline-none focus:border-oakWood">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-matteBlack mb-1.5">メールアドレス <span class="text-oakWood">*</span></label>
+                            <input type="email" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-lg bg-studioWall border border-subtleBorder text-sm text-matteBlack focus:outline-none focus:border-oakWood">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-matteBlack mb-1.5">ご相談カテゴリ</label>
+                        <select class="w-full px-3.5 py-2.5 rounded-lg bg-studioWall border border-subtleBorder text-sm text-matteBlack focus:outline-none focus:border-oakWood">
+                            <option>Webシステム・予約/管理アプリ開発</option>
+                            <option>Python / GAS / AI による業務自動化</option>
+                            <option>AWS環境構築・運用保守・コスト最適化</option>
+                            <option>UI/UXデザイン・LP/Webサイト制作</option>
+                            <option>その他・技術相談</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-matteBlack mb-1.5">ご相談内容・ご予算感 <span class="text-oakWood">*</span></label>
+                        <textarea rows="5" required placeholder="解決したい課題や、ご希望の納期・ご予算などをお気軽にご記入ください。" class="w-full px-3.5 py-2.5 rounded-lg bg-studioWall border border-subtleBorder text-sm text-matteBlack focus:outline-none focus:border-oakWood"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-matteBlack hover:bg-oakWood text-white text-xs font-medium tracking-widest uppercase transition-colors">
+                        ▶ 送信する / Send Inquiry
+                    </button>
+                    <div id="form-feedback" class="hidden p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs">
+                        お問い合わせを受け付けました。内容を確認のうえ、通常24時間以内にご返信いたします。
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE-OVER DETAIL DRAWER (FOR 3D GALLERY FRAMES & 3D BOOKSHELF ITEMS) -->
+    <!-- ===================================================================== -->
+    <div id="detail-drawer-backdrop" onclick="closeDetailDrawer()" class="fixed inset-0 bg-matteBlack/35 backdrop-blur-xs z-50 hidden transition-opacity">
+        <div id="detail-drawer" onclick="event.stopPropagation()" class="fixed top-0 right-0 bottom-0 w-full max-w-lg bg-studioWall border-l border-subtleBorder shadow-2xl p-6 sm:p-8 overflow-y-auto flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-subtleBorder">
+                    <span id="drawer-tag" class="text-xs font-mono text-oakWood font-semibold tracking-wider">[ CASE STUDY ]</span>
+                    <button onclick="closeDetailDrawer()" class="px-3 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-xs font-medium text-matteBlack transition-colors">
+                        [ 閉じる / Close ]
+                    </button>
+                </div>
+
+                <div class="mt-6 space-y-5">
+                    <h2 id="drawer-title" class="text-xl sm:text-2xl font-medium text-matteBlack leading-snug">
+                        Title
+                    </h2>
+
+                    <div id="drawer-visual" class="w-full h-44 rounded-xl border border-subtleBorder bg-white p-4 flex flex-col justify-between relative overflow-hidden">
+                    </div>
+
+                    <div id="drawer-meta" class="grid grid-cols-2 gap-3 text-xs">
+                    </div>
+
+                    <div class="space-y-3 text-sm text-inkGray leading-relaxed">
+                        <div class="font-medium text-matteBlack text-xs uppercase tracking-wider">[ 課題とアプローチ・成果 ]</div>
+                        <p id="drawer-desc" class="text-xs sm:text-sm leading-relaxed text-matteBlack/90">
+                            Description
+                        </p>
+                    </div>
+
+                    <div class="bg-white border border-subtleBorder rounded-xl p-4 space-y-2">
+                        <div class="text-xs font-medium text-matteBlack">[ 主な実装・担当範囲 ]</div>
+                        <ul id="drawer-bullets" class="text-xs text-inkGray space-y-1.5 leading-relaxed">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-subtleBorder flex items-center justify-between gap-3">
+                <button onclick="closeDetailDrawer(); resetCameraView();" class="px-4 py-2.5 rounded-lg bg-white hover:bg-studioWarm border border-subtleBorder text-xs font-medium text-matteBlack transition-colors">
+                    ◀ スタジオ全体に戻る
+                </button>
+                <button onclick="closeDetailDrawer(); switchTab('contact');" class="px-5 py-2.5 rounded-lg bg-matteBlack hover:bg-oakWood text-white text-xs font-medium transition-colors">
+                    ▶ この領域について相談する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- DIRECTORY INDEX MODAL (QUICK 2D LIST OF ALL 8 PROJECTS & BOOK ITEMS)  -->
+    <!-- ===================================================================== -->
+    <div id="directory-modal" onclick="closeDirectoryModal()" class="fixed inset-0 bg-matteBlack/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-studioWall border border-subtleBorder rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-subtleBorder mb-6">
+                <div>
+                    <span class="text-xs font-mono text-oakWood">[ STUDIO ARCHIVE INDEX ]</span>
+                    <h2 class="text-lg font-medium text-matteBlack">左右壁掛け実績（全8作品）・中央本棚スキル一覧</h2>
+                </div>
+                <button onclick="closeDirectoryModal()" class="px-3 py-1 rounded bg-white border border-subtleBorder text-xs font-medium">[ Close ]</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-7">
+                    <h3 class="text-xs font-mono uppercase text-inkGray mb-3">[ 01. 壁掛けプロジェクト実績 (左右対称 8作品) ]</h3>
+                    <div id="index-projects-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+                </div>
+                <div class="md:col-span-5">
+                    <h3 class="text-xs font-mono uppercase text-inkGray mb-3">[ 02. 中央本棚スキルアーカイブ (5冊) ]</h3>
+                    <div id="index-books-list" class="space-y-2.5"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- APPLICATION LOGIC: THREE.JS 3D STUDIO DIORAMA & INTERACTIVE UI        -->
+    <!-- ===================================================================== -->
+    <script>
+        // ---------------------------------------------------------------------
+        // 1. STRUCTURED PORTFOLIO DATA (8 SYMMETRICAL PROJECTS + 5 SKILL BOOKS)
+        // ---------------------------------------------------------------------
+        const projectsData = [
+            // --- RIGHT GALLERY (4 FRAMES: ARCHIVE 01 - 04) ---
+            {
+                id: 'proj-reservation',
+                side: 'RIGHT',
+                tag: '[ RIGHT FRAME 01 // WEB SYSTEM ]',
+                title: '高負荷対応・オンライン予約管理システム',
+                subtitle: 'PostgreSQL 排他制御 / Laravel / Next.js',
+                metricLabel: '二重予約発生率',
+                metricValue: '0.00% (完全排他制御)',
+                stackLabel: '主要技術構成',
+                stackValue: 'PHP / Laravel / PostgreSQL / AWS',
+                accentColor: '#2C4A52',
+                desc: '予約受付開始直後にアクセスが集中する新規サービス向けに、スマートフォン最適化された予約画面と管理者向け一元管理システムを構築。データベース層でのトランザクションおよび行ロック制御を実装し、同時アクセス時の二重予約やデータ不整合を完全に防止しました。',
+                bullets: [
+                    '〇 サーバー・DB両面での厳格な排他制御とリアルタイム空き状況同期',
+                    '〇 スマホユーザーが迷わず3ステップで完了できるUI/UX設計',
+                    '〇 管理者向け予約枠設定・キャンセル管理・CSV出力機能の実装'
+                ]
+            },
+            {
+                id: 'proj-automation',
+                side: 'RIGHT',
+                tag: '[ RIGHT FRAME 02 // DX & AUTOMATION ]',
+                title: 'マルチツール業務自動化パイプライン構築',
+                subtitle: 'Python / GAS / Gmail & Sheets API',
+                metricLabel: '月間削減工数',
+                metricValue: '約 45時間 / 月 削減',
+                stackLabel: '主要技術構成',
+                stackValue: 'Python / GAS / REST API / Claude',
+                accentColor: '#6B4E3D',
+                desc: '複数拠点から日々送付される非定型Excel・CSVデータの収集、表記ゆれクレンジング、基幹データベースへの登録、および異常値アラート通知を完全自動化。手作業による転記ミスをゼロにし、担当者が本来注力すべき分析業務へシフトできる環境を実現しました。',
+                bullets: [
+                    '〇 Pythonスクリプトによる高速データ検証・フォーマット自動変換',
+                    '〇 Google Workspace (Gmail / スプレッドシート) とのシームレスなAPI連携',
+                    '〇 エラー検知時の自動リトライおよびチャット通知による運用負荷軽減'
+                ]
+            },
+            {
+                id: 'proj-aws',
+                side: 'RIGHT',
+                tag: '[ RIGHT FRAME 03 // CLOUD INFRASTRUCTURE ]',
+                title: 'AWS本番環境 運用監視・コスト最適化',
+                subtitle: 'EC2 / RDS / CloudWatch / IAM 監査',
+                metricLabel: 'インフラ維持コスト',
+                metricValue: '月額 30% 削減達成',
+                stackLabel: '主要技術構成',
+                stackValue: 'AWS (EC2, RDS, S3, CloudWatch) / Linux',
+                accentColor: '#3D5245',
+                desc: '既存AWS環境の安定稼働と属人化解消を目的に、CloudWatchアラーム閾値の最適化、ALB/アプリログによる障害切り分け手順の標準化、IAM最小権限見直しを実施。さらに過剰スペックのインスタンスと不要ストレージを精査し、可用性を高めつつコストを大幅に圧縮しました。',
+                bullets: [
+                    '〇 障害予兆の早期検知とインフラ・アプリ双方からの迅速な原因特定',
+                    '〇 RDSスナップショット・バックアップ復旧手順の整備とリストア検証',
+                    '〇 Cost Explorer分析に基づくリザーブド/適正インスタンス構成の提案'
+                ]
+            },
+            {
+                id: 'proj-uiux',
+                side: 'RIGHT',
+                tag: '[ RIGHT FRAME 04 // UI/UX DESIGN SYSTEM ]',
+                title: 'BtoB SaaS 管理画面リニューアル & プロトタイプ',
+                subtitle: 'Figma / React / Tailwind CSS',
+                metricLabel: '業務操作完了スピード',
+                metricValue: '従来比 1.8倍 向上',
+                stackLabel: '主要技術構成',
+                stackValue: 'Figma / Photoshop / React / TypeScript',
+                accentColor: '#52455A',
+                desc: '機能が複雑化し操作に迷いが生じていた業務向けWebアプリケーションのUI/UXを全面刷新。要件定義の初期段階でFigmaによるインタラクティブな1ページプロトタイプを提示し、クライアントと完成イメージを早期に共有したうえで迷いのない導線へ再設計しました。',
+                bullets: [
+                    '〇 情報設計（IA）の再構築による画面遷移数の削減と視認性向上',
+                    '〇 開発前に操作感を検証できるFigmaプロトタイプの迅速な作成',
+                    '〇 保守性と拡張性の高いコンポーネントベースでのフロントエンド実装'
+                ]
+            },
+
+            // --- LEFT GALLERY (4 FRAMES: ARCHIVE 05 - 08, MIRROR-SYMMETRIC) ---
+            {
+                id: 'proj-ai-ocr',
+                side: 'LEFT',
+                tag: '[ LEFT FRAME 05 // AI & OCR WORKFLOW ]',
+                title: 'AI帳票OCR解析・請求書データ自動仕訳システム',
+                subtitle: 'Claude Vision API / Python / FastAPI',
+                metricLabel: '伝票処理リードタイム',
+                metricValue: '92% 短縮 (1件 3秒)',
+                stackLabel: '主要技術構成',
+                stackValue: 'Python / FastAPI / Claude API / PostgreSQL',
+                accentColor: '#3B4D61',
+                desc: 'PDFやスキャン画像で届く取引先ごとの異なるフォーマットの請求書・納品書を、マルチモーダルAIとPythonで高精度に構造化データへ変換。会計ソフト向けCSVの自動生成と異常金額の自動フラグ付けにより、経理部門の月末残業を大幅に削減しました。',
+                bullets: [
+                    '〇 非定型レイアウトのPDF/画像から明細行・税区分を自動抽出',
+                    '〇 過去取引データとの自動照合による二重請求・単価ミス検知',
+                    '〇 確認画面UIの実装により、人間の承認フローもスムーズに統合'
+                ]
+            },
+            {
+                id: 'proj-laravel-migration',
+                side: 'LEFT',
+                tag: '[ LEFT FRAME 06 // SYSTEM MODERNIZATION ]',
+                title: 'レガシーPHP基幹システム Laravel刷新・無停止移行',
+                subtitle: 'PHP 8 / Laravel / MySQL / AWS ECS',
+                metricLabel: 'APIレスポンス速度',
+                metricValue: '平均 3.4倍 高速化',
+                stackLabel: '主要技術構成',
+                stackValue: 'PHP / Laravel / MySQL / Docker / AWS',
+                accentColor: '#5A4A3A',
+                desc: '保守が困難になっていた旧バージョンのPHP業務システムを、最新のLaravelフレームワークおよびコンテナ基盤へ段階的に刷新。N+1クエリの解消とインデックス再設計を行い、データ整合性を保ったまま無停止での本番切り替えを完遂しました。',
+                bullets: [
+                    '〇 既存データベース構造の互換性を維持した段階的リファクタリング',
+                    '〇 自動テストスイートの導入によるデグレ防止と保守性の向上',
+                    '〇 セキュリティ脆弱性対策（CSRF/XSS/SQLインジェクション）の徹底'
+                ]
+            },
+            {
+                id: 'proj-ec-sync',
+                side: 'LEFT',
+                tag: '[ LEFT FRAME 07 // EC & INVENTORY SYNC ]',
+                title: '複数ECモール在庫・受注一元管理＆自動出荷連携',
+                subtitle: 'Shopify / 楽天 / Amazon API / GAS',
+                metricLabel: '売り越し・欠品トラブル',
+                metricValue: '導入後 0件 達成',
+                stackLabel: '主要技術構成',
+                stackValue: 'Python / REST Webhook / GAS / Slack API',
+                accentColor: '#36534C',
+                desc: '自社ECサイトと複数の大手モール間で発生していた手動在庫更新のタイムラグを解消するため、Webhookと定期バッチを組み合わせたリアルタイム在庫同期エンジンを開発。受注データの自動集約から倉庫出荷指示CSVの生成までを一気通貫で自動化しました。',
+                bullets: [
+                    '〇 受注発生から数秒以内の全モール在庫数自動引き当て処理',
+                    '〇 配送業者フォーマット別の送り状データ一括生成機能',
+                    '〇 在庫閾値割れ時の自動発注リマインドおよびSlack通知'
+                ]
+            },
+            {
+                id: 'proj-bi-portal',
+                side: 'LEFT',
+                tag: '[ LEFT FRAME 08 // EXECUTIVE BI PORTAL ]',
+                title: '経営KPI・リアルタイム売上分析BIダッシュボード',
+                subtitle: 'Next.js / TypeScript / BigQuery / AWS',
+                metricLabel: '経営レポート作成工数',
+                metricValue: '毎週 6時間 → 自動即時',
+                stackLabel: '主要技術構成',
+                stackValue: 'Next.js / TypeScript / Tailwind / SQL',
+                accentColor: '#4D4259',
+                desc: '営業・マーケティング・財務の各部門に散在していたデータを自動統合し、経営層がスマートフォンやPCからリアルタイムに粗利・LTV・部門別予実を把握できる専用BIポータルを構築。直感的なUIデザインと高速な集計クエリにより意思決定スピードを加速しました。',
+                bullets: [
+                    '〇 部門別・商品別の売上推移と目標達成率のリアルタイム可視化',
+                    '〇 権限ロールに応じた閲覧データ制御とセキュアな認証基盤',
+                    '〇 役員会議用サマリーレポートのワンクリックPDF/CSVエクスポート'
+                ]
+            }
+        ];
+
+        const BOOKS_DATA = [
+            {
+                id: 'book-python',
+                spineTitle: 'Python / AI',
+                spineColor: '#2E4057',
+                tag: '[ BOOKSHELF VOL.01 // PYTHON & AI ]',
+                title: 'Python 業務自動化 & 生成AI実務統合',
+                metricLabel: '実務経験年数',
+                metricValue: '15+ 年 (開発・自動化)',
+                stackLabel: '主なツール・技術',
+                stackValue: 'Python / Pandas / Claude Code / OpenAI API',
+                desc: 'データ処理、Webスクレイピング、API連携スクリプトの構築から、Claude Code等の最新AI開発環境を活用した高速かつ高品質なシステム実装まで対応。単なる技術導入ではなく「何時間の工数が削減できるか」というビジネス成果に直結する自動化を設計します。',
+                bullets: [
+                    '〇 Excel・CSVの高度なデータクレンジング・集計レポート自動生成',
+                    '〇 社内ドキュメント検索や問い合わせ対応を効率化するAIワークフロー構築',
+                    '〇 既存業務システムと外部クラウドAPIを繋ぐ堅牢なバッチ処理開発'
+                ]
+            },
+            {
+                id: 'book-php',
+                spineTitle: 'PHP / Laravel',
+                spineColor: '#4A5D4E',
+                tag: '[ BOOKSHELF VOL.02 // WEB BACKEND ]',
+                title: 'PHP / Laravel Webシステム・データベース設計',
+                metricLabel: '実務経験年数',
+                metricValue: '15+ 年 (設計・構築・保守)',
+                stackLabel: '主なツール・技術',
+                stackValue: 'PHP / Laravel / PostgreSQL / MySQL / WordPress',
+                desc: '予約管理システム、会員制プラットフォーム、業務基幹Webアプリなど、長期運用を前提とした保守性の高いバックエンドを構築。アクセス集中時の排他制御やSQLチューニング、セキュリティ対策（XSS/SQLi/CSRF防止）を徹底します。',
+                bullets: [
+                    '〇 トランザクション整合性を重視したリレーショナルDB設計',
+                    '〇 既存レガシーPHPシステムのモダナイズ・機能追加・保守引き継ぎ',
+                    '〇 WordPressの高度なカスタマイズおよびAPI連携基盤の構築'
+                ]
+            },
+            {
+                id: 'book-aws',
+                spineTitle: 'AWS Infra',
+                spineColor: '#7A543E',
+                tag: '[ BOOKSHELF VOL.03 // CLOUD & SECURITY ]',
+                title: 'AWS クラウドインフラ構築・安定運用保守',
+                metricLabel: '対応領域',
+                metricValue: '設計・構築・監視・コスト改善',
+                stackLabel: '主なAWSサービス',
+                stackValue: 'EC2 / RDS / S3 / VPC / ALB / CloudWatch / IAM',
+                desc: '本番システムの安定稼働を支えるAWSインフラの設計・運用保守を担当。障害発生時のログ調査・原因切り分けから、バックアップ・復旧手順の整備、IAM権限の適正化、無駄なリソース削減による月額コスト改善までトータルに支援します。',
+                bullets: [
+                    '〇 CloudWatchメトリクス・アラーム最適化による障害の早期検知',
+                    '〇 インフラ側・アプリケーション側の双方を見据えた迅速な障害切り分け',
+                    '〇 属人化を防ぐ運用手順書・障害対応ドキュメントの整備'
+                ]
+            },
+            {
+                id: 'book-design',
+                spineTitle: 'UI/UX Design',
+                spineColor: '#5C4D63',
+                tag: '[ BOOKSHELF VOL.04 // DESIGN & PROTOTYPE ]',
+                title: 'UI/UXデザイン・LP制作・プロトタイピング',
+                metricLabel: 'デザインツール',
+                metricValue: 'Figma / Photoshop / Illustrator',
+                stackLabel: 'フロントエンド実装',
+                stackValue: 'HTML5 / Tailwind CSS / React / Next.js / STUDIO',
+                desc: 'エンジニアリングの知識を兼ね備えたデザイナーとして、実装可能性と美しさを両立したUI/UXを提供。新規WebサイトやLP、Webアプリ開発においては、着手前に1ページ分のデザインプロトタイプを作成し、完成イメージを共有しながら進めることが可能です。',
+                bullets: [
+                    '〇 ユーザーの行動導線から逆算した分かりやすい画面レイアウト設計',
+                    '〇 スマートフォン・タブレット・PCすべてに最適化されたレスポンシブ実装',
+                    '〇 Figmaを用いたコンポーネント設計およびデザインシステム構築'
+                ]
+            },
+            {
+                id: 'book-gas',
+                spineTitle: 'Automation / GAS',
+                spineColor: '#3B596A',
+                tag: '[ BOOKSHELF VOL.05 // WORKFLOW & GAS ]',
+                title: 'Google Workspace 連携・業務プロセス自動化',
+                metricLabel: '導入効果',
+                metricValue: '定型作業の自動化・ミスゼロ化',
+                stackLabel: '連携サービス',
+                stackValue: 'GAS / Gmail / Sheets / Slack / Chatwork / Webhook',
+                desc: 'サーバー維持費をかけずに導入できるGoogle Apps Script (GAS) や各種Webhookを活用し、中小企業や現場チームの日常業務をスピーディーに自動化。納品後も現場担当者様が安心して運用できるシンプルな構成を心がけています。',
+                bullets: [
+                    '〇 フォーム受付から見積書PDF自動生成・メール送信までの自動化',
+                    '〇 スプレッドシートをデータベースとした簡易業務管理ツールの構築',
+                    '〇 定期レポートの自動集計およびSlack/Chatworkへの定時通知'
+                ]
+            }
+        ];
+
+        const AUTOMATION_SCENARIOS = [
+            {
+                tag: '[ CASE 01 // PYTHON + POSTGRESQL + GOOGLE SHEETS API ]',
+                title: '複数拠点の売上CSVデータクレンジング・異常値検知・DB一括登録',
+                beforeTime: '所要時間: 約120分 / 日',
+                afterTime: '処理時間: 3.8秒 (工数 99.9% 削減)',
+                beforeSteps: [
+                    { title: '〇 1. 複数メール・フォルダからのファイル収集 (30分)', desc: '担当者ごとに異なるフォーマットのExcel/CSVを手動ダウンロード。' },
+                    { title: '〇 2. 目視での表記ゆれ修正・重複チェック (50分)', desc: '全角半角の統一、日付フォーマット修正、欠損データの確認作業。' },
+                    { title: '〇 3. 基幹システムへの転記と集計レポート作成 (40分)', desc: 'コピー＆ペーストによる入力ミスのリスクと残業の常態化。' }
+                ],
+                logs: [
+                    { delay: 200, text: '[00:00.12] Connecting to Google Drive & Gmail API...' },
+                    { delay: 600, text: '[00:00.84] Fetched 14 CSV/Excel files (Total: 12,480 rows).' },
+                    { delay: 1100, text: '[00:01.65] Running schema validation & normalizing encoding (UTF-8)...' },
+                    { delay: 1600, text: '[00:02.40] Detected 3 duplicate rows -> Auto-quarantined to audit_log.' },
+                    { delay: 2100, text: '[00:03.15] Executing PostgreSQL batch upsert transaction...' },
+                    { delay: 2600, text: '[00:03.80] SUCCESS: 12,477 records synced. Executive summary posted.' }
+                ]
+            },
+            {
+                tag: '[ CASE 02 // CLAUDE AI API + GMAIL + CRM WEBHOOK ]',
+                title: '顧客問い合わせメールのAI要件解析・見積ドラフト自動作成',
+                beforeTime: '所要時間: 約45分 / 件',
+                afterTime: '処理時間: 4.2秒 (初回返信スピード 10倍)',
+                beforeSteps: [
+                    { title: '〇 1. 問い合わせメールの読解と過去案件の検索 (15分)', desc: '長文の要望から必要技術・予算感・希望納期を手作業で抽出。' },
+                    { title: '〇 2. 概算工数の算出と提案構成の作成 (20分)', desc: '過去の類似見積書を探し出し、項目を書き換えてドラフト作成。' },
+                    { title: '〇 3. CRMへの顧客情報登録と担当者アサイン (10分)', desc: 'スプレッドシートや管理ツールへの二重入力作業。' }
+                ],
+                logs: [
+                    { delay: 200, text: '[00:00.15] Webhook triggered: New inquiry received from client.' },
+                    { delay: 700, text: '[00:01.10] Extracting technical requirements & constraints via AI...' },
+                    { delay: 1300, text: '[00:02.25] Matched stack: Laravel + AWS RDS. Estimating phase hours...' },
+                    { delay: 1900, text: '[00:03.40] Generating structured Japanese proposal & estimate draft...' },
+                    { delay: 2500, text: '[00:04.20] SUCCESS: Draft saved in Gmail & synced to CRM dashboard.' }
+                ]
+            },
+            {
+                tag: '[ CASE 03 // AWS CLOUDWATCH + PYTHON BOTO3 + SLACK ]',
+                title: 'AWS本番環境リソース監視・ログ異常切り分け・週次コスト報告',
+                beforeTime: '所要時間: 約180分 / 週',
+                afterTime: '処理時間: 完全無人・リアルタイム検知',
+                beforeSteps: [
+                    { title: '〇 1. AWSマネジメントコンソールでの目視確認 (60分)', desc: 'EC2 CPU負荷、RDSストレージ残量、バックアップ成否を手動巡回。' },
+                    { title: '〇 2. エラーログの抽出と原因調査 (70分)', desc: 'ALBアクセスログとアプリログを突合し、ボトルネックを特定。' },
+                    { title: '〇 3. Cost Explorer確認と週次報告書の作成 (50分)', desc: 'サービス別の利用料金推移をまとめ、システム部へ報告。' }
+                ],
+                logs: [
+                    { delay: 200, text: '[00:00.10] Initializing AWS Boto3 session (ap-northeast-1)...' },
+                    { delay: 650, text: '[00:00.95] Checking EC2/RDS CloudWatch metrics & backup snapshots: OK.' },
+                    { delay: 1200, text: '[00:01.80] Scanning ALB 5xx error patterns across last 24h: 0 anomalies.' },
+                    { delay: 1800, text: '[00:02.75] Analyzing Cost Explorer: 1 idle EBS volume flagged (-$18/mo).' },
+                    { delay: 2400, text: '[00:03.50] SUCCESS: Weekly health & cost optimization report delivered.' }
+                ]
+            }
+        ];
+
+        // ---------------------------------------------------------------------
+        // 2. THREE.JS ARCHITECTURAL STUDIO GALLERY SCENE
+        // ---------------------------------------------------------------------
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let interactiveObjects = [];
+        let hoveredObject = null;
+        let selectedObject = null;
+        let currentScenarioIdx = 0;
+        let demoTimeouts = [];
+
+        // Balanced architectural camera framing centered on desk + overhead bookshelf + symmetric left/right galleries
+        let isCameraAnimating = false;
+        const defaultCamPos = new THREE.Vector3(1.48, 2.25, 4.95);
+        const defaultTargetPos = new THREE.Vector3(1.48, 1.55, -1.2);
+        let targetCamPos = defaultCamPos.clone();
+        let targetLookAt = defaultTargetPos.clone();
+
+        // Monitor screen dynamic canvas textures
+        let monitorCanvas, monitorCtx, monitorTexture;
+        let subMonitorCanvas, subMonitorCtx, subMonitorTexture;
+        let monitorAnimTick = 0;
+        let pcFanMeshes = [];
+        let characterRig = null;
+        let greetingState = {
+            active: false,
+            startTime: 0,
+            duration: 5.0
+        };
+
+        function initThreeStudio() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#F8F7F4');
+            scene.fog = new THREE.Fog('#F8F7F4', 12, 24);
+
+            const width = container.clientWidth || window.innerWidth;
+            const height = container.clientHeight || (window.innerHeight - 64);
+
+            camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+            camera.position.copy(defaultCamPos);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // OrbitControls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.copy(defaultTargetPos);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.06;
+            controls.minDistance = 1.1;
+            controls.maxDistance = 12.0;
+            controls.maxPolarAngle = Math.PI / 2 - 0.03;
+            controls.minAzimuthAngle = -Math.PI / 2.2;
+            controls.maxAzimuthAngle = Math.PI / 2.2;
+
+            controls.addEventListener('start', () => {
+                isCameraAnimating = false;
+            });
+
+            // Studio Lighting
+            const ambientLight = new THREE.AmbientLight(0xfffdf9, 0.72);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xfff8ee, 0.75);
+            dirLight.position.set(4.5, 7.5, 5.5);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 22;
+            dirLight.shadow.camera.left = -7;
+            dirLight.shadow.camera.right = 7;
+            dirLight.shadow.camera.top = 7;
+            dirLight.shadow.camera.bottom = -3;
+            dirLight.shadow.bias = -0.0005;
+            scene.add(dirLight);
+
+            // Symmetrical Gallery Spotlights illuminating Left Gallery (-0.76), Center Bookshelf (1.48), and Right Gallery (3.72)
+            const spotLeft = new THREE.SpotLight(0xfff3e0, 0.52, 10, Math.PI / 4, 0.5, 1);
+            spotLeft.position.set(-0.76, 4.3, 0.85);
+            spotLeft.target.position.set(-0.76, 2.20, -1.89);
+            scene.add(spotLeft);
+            scene.add(spotLeft.target);
+
+            const spotCenter = new THREE.SpotLight(0xfff4e2, 0.45, 9, Math.PI / 4, 0.5, 1);
+            spotCenter.position.set(1.48, 4.3, 0.85);
+            spotCenter.target.position.set(1.48, 2.34, -1.72);
+            scene.add(spotCenter);
+            scene.add(spotCenter.target);
+
+            const spotFrame1 = new THREE.SpotLight(0xfff3e0, 0.50, 10, Math.PI / 4, 0.5, 1);
+            spotFrame1.position.set(3.18, 4.3, 0.85);
+            spotFrame1.target.position.set(3.18, 2.20, -1.89);
+            scene.add(spotFrame1);
+            scene.add(spotFrame1.target);
+
+            const spotFrame2 = new THREE.SpotLight(0xfff3e0, 0.50, 10, Math.PI / 4, 0.5, 1);
+            spotFrame2.position.set(4.26, 4.3, 0.85);
+            spotFrame2.target.position.set(4.26, 2.20, -1.89);
+            scene.add(spotFrame2);
+            scene.add(spotFrame2.target);
+
+            // Build Architectural Studio Environment
+            buildStudioArchitecture();
+            buildGalleryFrames();
+            buildBookshelfAndBooks();
+            buildRealisticWorkstation();
+            buildChairAndCharacter();
+
+            // Raycaster for mouse/touch interactions
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2(-99, -99);
+
+            renderer.domElement.addEventListener('pointermove', onPointerMove);
+            renderer.domElement.addEventListener('click', onCanvasClick);
+            window.addEventListener('resize', onWindowResize);
+
+            animateThreeStudio();
+        }
+
+        function buildStudioArchitecture() {
+            const floorGeo = new THREE.PlaneGeometry(18, 14);
+            const floorMat = new THREE.MeshStandardMaterial({ color: '#EAE6DF', roughness: 0.85, metalness: 0.02 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            const gridHelper = new THREE.GridHelper(16, 32, 0xd6d1c7, 0xe0dcd3);
+            gridHelper.position.y = 0.002;
+            scene.add(gridHelper);
+
+            const wallMat = new THREE.MeshStandardMaterial({ color: '#F8F7F4', roughness: 0.92 });
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(12.5, 4.8, 0.25), wallMat);
+            backWall.position.set(1.48, 2.4, -2.05);
+            backWall.receiveShadow = true;
+            scene.add(backWall);
+
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, 6.5), wallMat);
+            leftWall.position.set(-4.65, 2.4, 1.0);
+            leftWall.receiveShadow = true;
+            scene.add(leftWall);
+
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, 6.5), wallMat);
+            rightWall.position.set(7.60, 2.4, 1.0);
+            rightWall.receiveShadow = true;
+            scene.add(rightWall);
+
+            const trimMat = new THREE.MeshStandardMaterial({ color: '#D6D1C7', roughness: 0.7 });
+            const backTrim = new THREE.Mesh(new THREE.BoxGeometry(12.3, 0.12, 0.04), trimMat);
+            backTrim.position.set(1.48, 0.06, -1.91);
+            scene.add(backTrim);
+        }
+
+        function createProjectFrameTexture(proj, index) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 352;
+            const ctx = canvas.getContext('2d');
+
+            // Gallery Matting Background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, 512, 352);
+
+            // Inner Artwork Card
+            ctx.fillStyle = proj.accentColor;
+            ctx.fillRect(24, 24, 464, 212);
+
+            // Minimalist Architectural Geometric Accent
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.13)';
+            ctx.beginPath();
+            ctx.arc(420, 86, 68, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#FDE68A';
+            ctx.font = '600 15px monospace';
+            ctx.fillText(`ARCHIVE 0${index + 1}`, 42, 58);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '700 21px "Noto Sans JP", Inter, sans-serif';
+            const shortTitle = proj.title.length > 17 ? proj.title.slice(0, 17) + '...' : proj.title;
+            ctx.fillText(shortTitle, 42, 102);
+
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = '14px monospace';
+            ctx.fillText(proj.subtitle, 42, 136);
+
+            // Metric Pill inside Frame
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.36)';
+            ctx.fillRect(42, 166, 310, 42);
+            ctx.fillStyle = '#FDE68A';
+            ctx.font = '600 14px "Noto Sans JP", sans-serif';
+            ctx.fillText(`${proj.metricLabel}: ${proj.metricValue}`, 54, 192);
+
+            // Bottom Gallery Caption Area
+            ctx.fillStyle = '#1A1A1A';
+            ctx.font = '600 16px "Noto Sans JP", sans-serif';
+            ctx.fillText(proj.title, 24, 276);
+
+            ctx.fillStyle = '#6B7280';
+            ctx.font = '13px monospace';
+            ctx.fillText(proj.stackValue, 24, 306);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        // Smaller, symmetrical 4-frame portfolio galleries on BOTH Right and Left sides of the PC desk
+        function buildGalleryFrames() {
+            const framePositions = [
+                // 4 Right-side frames (2x2 grid at x = 3.18 & 4.26)
+                { x: 3.18, y: 2.66 },
+                { x: 4.26, y: 2.66 },
+                { x: 3.18, y: 1.82 },
+                { x: 4.26, y: 1.82 },
+                // 4 Left-side frames (mirror-symmetric 2x2 grid around desk center x = 1.48 -> x = -0.22 & -1.30)
+                { x: -0.22, y: 2.66 },
+                { x: -1.30, y: 2.66 },
+                { x: -0.22, y: 1.82 },
+                { x: -1.30, y: 1.82 }
+            ];
+
+            const frameMat = new THREE.MeshStandardMaterial({ color: '#1A1A1A', roughness: 0.35, metalness: 0.3 });
+            const matteMat = new THREE.MeshStandardMaterial({ color: '#FAF9F6', roughness: 0.85 });
+
+            projectsData.forEach((proj, idx) => {
+                const pos = framePositions[idx];
+                if (!pos) return;
+
+                const frameGroup = new THREE.Group();
+                frameGroup.position.set(pos.x, pos.y, -1.89);
+
+                // Refined Smaller Matte Black Outer Frame (0.94m x 0.66m x 0.045m)
+                const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.66, 0.045), frameMat);
+                outerFrame.castShadow = true;
+                frameGroup.add(outerFrame);
+
+                // Inner Architectural Gallery Matte Border (0.86m x 0.59m)
+                const innerMatte = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.59, 0.008), matteMat);
+                innerMatte.position.z = 0.022;
+                frameGroup.add(innerMatte);
+
+                // Canvas Print Surface (0.80m x 0.54m)
+                const artTex = createProjectFrameTexture(proj, idx);
+                const artMesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.80, 0.54),
+                    new THREE.MeshStandardMaterial({ map: artTex, roughness: 0.4 })
+                );
+                artMesh.position.z = 0.027;
+
+                artMesh.userData = {
+                    type: 'project',
+                    data: proj,
+                    focusPos: new THREE.Vector3(pos.x, pos.y, 0.15),
+                    focusTarget: new THREE.Vector3(pos.x, pos.y, -1.89)
+                };
+
+                interactiveObjects.push(artMesh);
+                frameGroup.add(artMesh);
+                scene.add(frameGroup);
+            });
+        }
+
+        function createBookSpineTexture(book) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = book.spineColor;
+            ctx.fillRect(0, 0, 128, 512);
+
+            ctx.fillStyle = 'rgba(253, 230, 138, 0.45)';
+            ctx.fillRect(14, 32, 100, 4);
+            ctx.fillRect(14, 476, 100, 4);
+
+            ctx.save();
+            ctx.translate(64, 256);
+            ctx.rotate(Math.PI / 2);
+            ctx.fillStyle = '#F8F7F4';
+            ctx.font = '700 26px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(book.spineTitle, 0, 0);
+            ctx.restore();
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        // Centered floating natural oak bookshelf directly above the PC desk (desk center x = 1.48)
+        function buildBookshelfAndBooks() {
+            const shelfGroup = new THREE.Group();
+            const shelfX = 1.48;
+            const shelfY = 2.34;
+            const shelfZ = -1.72;
+            shelfGroup.position.set(shelfX, shelfY, shelfZ);
+
+            const oakMat = new THREE.MeshStandardMaterial({ color: '#8B6F4E', roughness: 0.65 });
+            const shelfW = 1.38;
+
+            // Floating Wall Bookshelf Plank + Side Brackets centered over the 2.25m desk
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(shelfW, 0.052, 0.36), oakMat);
+            plank.castShadow = true;
+            plank.receiveShadow = true;
+            shelfGroup.add(plank);
+
+            [-shelfW / 2 + 0.025, shelfW / 2 - 0.025].forEach(bx => {
+                const side = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.44, 0.34), oakMat);
+                side.position.set(bx, 0.22, 0);
+                side.castShadow = true;
+                shelfGroup.add(side);
+            });
+
+            // Arrange 5 Interactive Skill Books symmetrically along the centered shelf
+            const pageMat = new THREE.MeshStandardMaterial({ color: '#F5F2EB', roughness: 0.85 });
+
+            BOOKS_DATA.forEach((book, idx) => {
+                const bookW = 0.13;
+                const bookH = 0.40 - (idx % 2) * 0.025;
+                const bookD = 0.26;
+                const localX = -0.44 + idx * 0.22;
+                const localY = 0.026 + bookH / 2;
+                const localZ = 0.02;
+
+                const spineTex = createBookSpineTexture(book);
+                const spineMat = new THREE.MeshStandardMaterial({ map: spineTex, roughness: 0.5 });
+                const coverMat = new THREE.MeshStandardMaterial({ color: book.spineColor, roughness: 0.6 });
+
+                const materials = [coverMat, coverMat, pageMat, pageMat, spineMat, pageMat];
+                const bookMesh = new THREE.Mesh(new THREE.BoxGeometry(bookW, bookH, bookD), materials);
+                bookMesh.position.set(localX, localY, localZ);
+                bookMesh.castShadow = true;
+                bookMesh.receiveShadow = true;
+
+                bookMesh.userData = {
+                    type: 'book',
+                    data: book,
+                    baseZ: localZ,
+                    targetZ: localZ,
+                    focusPos: new THREE.Vector3(shelfX, shelfY + 0.28, 0.35),
+                    focusTarget: new THREE.Vector3(shelfX, shelfY + 0.20, shelfZ)
+                };
+
+                interactiveObjects.push(bookMesh);
+                shelfGroup.add(bookMesh);
+            });
+
+            scene.add(shelfGroup);
+        }
+
+        function createOakWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#9C7E59';
+            ctx.fillRect(0, 0, 512, 512);
+
+            for (let y = 0; y < 512; y += 2) {
+                const wave = Math.sin(y * 0.045) * 6;
+                ctx.fillStyle = y % 4 === 0 ? 'rgba(74, 56, 37, 0.11)' : 'rgba(218, 192, 158, 0.09)';
+                ctx.fillRect(0, y, 512, 1.5);
+                ctx.fillStyle = 'rgba(60, 42, 24, 0.06)';
+                ctx.fillRect((y * 7 + wave) % 512, y, 95, 1);
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        function createDeskMatTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#262626';
+            ctx.fillRect(0, 0, 512, 256);
+
+            for (let i = 0; i < 4500; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 256;
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.08)';
+                ctx.fillRect(x, y, 2, 2);
+            }
+
+            ctx.strokeStyle = '#52525B';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.strokeRect(10, 10, 492, 236);
+            ctx.setLineDash([]);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        function createKeyboardTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#27272A';
+            ctx.fillRect(0, 0, 512, 200);
+
+            const rows = [
+                { count: 14, y: 12, h: 24, accent: [0, 13] },
+                { count: 14, y: 42, h: 26, accent: [13] },
+                { count: 13, y: 74, h: 26, accent: [0, 12] },
+                { count: 12, y: 106, h: 26, accent: [0, 11] },
+                { count: 11, y: 138, h: 26, accent: [0, 10] },
+                { count: 8, y: 170, h: 22, accent: [0, 1, 2, 4, 5, 6, 7] }
+            ];
+
+            rows.forEach((row, rIdx) => {
+                const pad = 10;
+                const totalW = 512 - pad * 2;
+                const gap = 4;
+                const keyW = (totalW - gap * (row.count - 1)) / row.count;
+
+                for (let c = 0; c < row.count; c++) {
+                    let x = pad + c * (keyW + gap);
+                    let w = keyW;
+
+                    if (rIdx === 5 && c === 3) {
+                        w = keyW * 3.2;
+                    } else if (rIdx === 5 && c > 3) {
+                        x += keyW * 2.2;
+                        if (x + w > 502) continue;
+                    }
+
+                    const isAccent = row.accent.includes(c);
+                    ctx.fillStyle = isAccent ? '#3F3F46' : '#E4E4E7';
+                    ctx.fillRect(x, row.y, w, row.h);
+
+                    ctx.fillStyle = isAccent ? '#52525B' : '#FAFAFA';
+                    ctx.fillRect(x + 2, row.y + 2, w - 4, row.h - 5);
+                }
+            });
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        function createWovenFabricTexture(baseHex, weaveHex) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = baseHex;
+            ctx.fillRect(0, 0, 128, 128);
+
+            ctx.fillStyle = weaveHex;
+            for (let y = 0; y < 128; y += 4) {
+                for (let x = (y % 8 === 0 ? 0 : 2); x < 128; x += 4) {
+                    ctx.fillRect(x, y, 2, 2);
+                }
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(8, 8);
+            return tex;
+        }
+
+        // Realistic PC Workstation centered at x = 1.48 (2.25m wide natural oak desk)
+        function buildRealisticWorkstation() {
+            const deskGroup = new THREE.Group();
+            const deskX = 1.48;
+            const deskZ = -1.12;
+            const deskH = 0.80;
+            const deskW = 2.25;
+            const deskD = 0.90;
+
+            const oakTex = createOakWoodTexture();
+            const oakMat = new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.58, metalness: 0.04 });
+            const matteBlackMat = new THREE.MeshStandardMaterial({ color: '#1A1A1A', roughness: 0.42, metalness: 0.45 });
+            const brushedAlumMat = new THREE.MeshStandardMaterial({ color: '#A1A1AA', roughness: 0.32, metalness: 0.78 });
+            const darkAlumMat = new THREE.MeshStandardMaterial({ color: '#27272A', roughness: 0.38, metalness: 0.65 });
+            const ceramicMat = new THREE.MeshStandardMaterial({ color: '#F8F7F4', roughness: 0.25, metalness: 0.05 });
+
+            // 1. Natural Oak Wood Tabletop with beveled under-frame
+            const tableTop = new THREE.Mesh(new THREE.BoxGeometry(deskW, 0.045, deskD), oakMat);
+            tableTop.position.set(deskX, deskH, deskZ);
+            tableTop.castShadow = true;
+            tableTop.receiveShadow = true;
+            deskGroup.add(tableTop);
+
+            const underFrame = new THREE.Mesh(new THREE.BoxGeometry(deskW - 0.16, 0.035, deskD - 0.16), matteBlackMat);
+            underFrame.position.set(deskX, deskH - 0.038, deskZ);
+            deskGroup.add(underFrame);
+
+            // Tapered Matte Black Architectural Steel Legs
+            [
+                [-1.00, -0.34],
+                [1.00, -0.34],
+                [-1.00, 0.34],
+                [1.00, 0.34]
+            ].forEach(([lx, lz]) => {
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.018, deskH - 0.02, 12), matteBlackMat);
+                leg.position.set(deskX + lx, (deskH - 0.02) / 2, deskZ + lz);
+                leg.castShadow = true;
+                deskGroup.add(leg);
+            });
+
+            // 2. Stitched Dark Felt Desk Mat
+            const matTex = createDeskMatTexture();
+            const deskMatMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(1.06, 0.006, 0.42),
+                new THREE.MeshStandardMaterial({ map: matTex, roughness: 0.92 })
+            );
+            deskMatMesh.position.set(deskX - 0.04, deskH + 0.025, deskZ + 0.16);
+            deskMatMesh.receiveShadow = true;
+            deskGroup.add(deskMatMesh);
+
+            // 3. Articulated Aluminum Monitor Arm
+            const armX = deskX - 0.06;
+            const armZ = deskZ - 0.37;
+            const clampBase = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.085), darkAlumMat);
+            clampBase.position.set(armX, deskH + 0.02, armZ);
+            deskGroup.add(clampBase);
+
+            const verticalPost = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.40, 16), brushedAlumMat);
+            verticalPost.position.set(armX, deskH + 0.22, armZ);
+            verticalPost.castShadow = true;
+            deskGroup.add(verticalPost);
+
+            const lowerArm = new THREE.Mesh(new THREE.BoxGeometry(0.036, 0.036, 0.22), brushedAlumMat);
+            lowerArm.position.set(armX, deskH + 0.36, armZ + 0.10);
+            lowerArm.rotation.x = -0.18;
+            deskGroup.add(lowerArm);
+
+            const hingeJoint = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.05, 16), darkAlumMat);
+            hingeJoint.position.set(armX, deskH + 0.38, armZ + 0.20);
+            deskGroup.add(hingeJoint);
+
+            // 4. Primary 32-Inch Thin-Bezel Studio Monitor
+            const bezelW = 1.24;
+            const bezelH = 0.70;
+            const monY = deskH + 0.53;
+            const monZ = deskZ - 0.14;
+
+            const monitorChassis = new THREE.Mesh(new THREE.BoxGeometry(bezelW, bezelH, 0.026), darkAlumMat);
+            monitorChassis.position.set(armX, monY, monZ);
+            monitorChassis.castShadow = true;
+            deskGroup.add(monitorChassis);
+
+            const chinBar = new THREE.Mesh(new THREE.BoxGeometry(bezelW, 0.030, 0.028), brushedAlumMat);
+            chinBar.position.set(armX, monY - bezelH / 2 + 0.015, monZ + 0.001);
+            deskGroup.add(chinBar);
+
+            monitorCanvas = document.createElement('canvas');
+            monitorCanvas.width = 1024;
+            monitorCanvas.height = 560;
+            monitorCtx = monitorCanvas.getContext('2d');
+            monitorTexture = new THREE.CanvasTexture(monitorCanvas);
+            monitorTexture.anisotropy = 4;
+
+            const screenMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(bezelW - 0.030, bezelH - 0.048),
+                new THREE.MeshBasicMaterial({ map: monitorTexture })
+            );
+            screenMesh.position.set(armX, monY + 0.01, monZ + 0.015);
+
+            screenMesh.userData = {
+                type: 'monitor',
+                data: {
+                    title: 'PC業務自動化・AIパイプライン ワークステーション',
+                    subtitle: 'クリックしてライブシミュレーション画面を開く'
+                },
+                focusPos: new THREE.Vector3(deskX - 0.04, deskH + 0.54, deskZ + 1.40),
+                focusTarget: new THREE.Vector3(deskX - 0.04, deskH + 0.48, deskZ - 0.10)
+            };
+            monitorChassis.userData = screenMesh.userData;
+            interactiveObjects.push(screenMesh);
+            deskGroup.add(screenMesh);
+
+            // 5. Vertical Secondary Reference Monitor (AWS CloudWatch & API Workflow)
+            const subW = 0.38;
+            const subH = 0.62;
+            const subX = deskX + 0.76;
+            const subY = deskH + 0.47;
+            const subZ = deskZ - 0.08;
+
+            const subStand = new THREE.Mesh(new THREE.BoxGeometry(0.046, 0.32, 0.038), darkAlumMat);
+            subStand.position.set(subX, deskH + 0.17, subZ - 0.03);
+            deskGroup.add(subStand);
+
+            const subBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.014, 0.16), brushedAlumMat);
+            subBase.position.set(subX, deskH + 0.028, subZ - 0.02);
+            deskGroup.add(subBase);
+
+            const subChassis = new THREE.Mesh(new THREE.BoxGeometry(subW, subH, 0.024), darkAlumMat);
+            subChassis.position.set(subX, subY, subZ);
+            subChassis.rotation.y = -0.24;
+            subChassis.castShadow = true;
+            deskGroup.add(subChassis);
+
+            subMonitorCanvas = document.createElement('canvas');
+            subMonitorCanvas.width = 360;
+            subMonitorCanvas.height = 580;
+            subMonitorCtx = subMonitorCanvas.getContext('2d');
+            subMonitorTexture = new THREE.CanvasTexture(subMonitorCanvas);
+
+            const subScreen = new THREE.Mesh(
+                new THREE.PlaneGeometry(subW - 0.022, subH - 0.022),
+                new THREE.MeshBasicMaterial({ map: subMonitorTexture })
+            );
+            subScreen.position.set(subX - 0.003, subY, subZ + 0.013);
+            subScreen.rotation.y = -0.24;
+            subScreen.userData = screenMesh.userData;
+            interactiveObjects.push(subScreen);
+            deskGroup.add(subScreen);
+
+            // 6. Compact 75% Aluminum Mechanical Keyboard + Braided USB-C Cable
+            const kbX = deskX - 0.12;
+            const kbZ = deskZ + 0.16;
+            const kbTex = createKeyboardTexture();
+            const kbMaterials = [
+                brushedAlumMat,
+                brushedAlumMat,
+                new THREE.MeshStandardMaterial({ map: kbTex, roughness: 0.45 }),
+                darkAlumMat,
+                brushedAlumMat,
+                brushedAlumMat
+            ];
+            const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.022, 0.20), kbMaterials);
+            keyboard.position.set(kbX, deskH + 0.039, kbZ);
+            keyboard.rotation.x = 0.05;
+            keyboard.castShadow = true;
+            deskGroup.add(keyboard);
+
+            const underglow = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.48, 0.18),
+                new THREE.MeshBasicMaterial({ color: '#FDE68A', transparent: true, opacity: 0.35 })
+            );
+            underglow.rotation.x = -Math.PI / 2;
+            underglow.position.set(kbX, deskH + 0.029, kbZ);
+            deskGroup.add(underglow);
+
+            const cableCurve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(kbX - 0.15, deskH + 0.036, kbZ - 0.09),
+                new THREE.Vector3(kbX - 0.17, deskH + 0.030, kbZ - 0.21),
+                new THREE.Vector3(kbX - 0.11, deskH + 0.026, kbZ - 0.33)
+            ]);
+            const cableMesh = new THREE.Mesh(new THREE.TubeGeometry(cableCurve, 16, 0.0045, 8, false), matteBlackMat);
+            deskGroup.add(cableMesh);
+
+            // 7. Ergonomic Sculpted Wireless Mouse
+            const mouseX = deskX + 0.28;
+            const mouseZ = deskZ + 0.17;
+            const mouseBody = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.035, 0.16), darkAlumMat);
+            mouseBody.position.set(mouseX, deskH + 0.044, mouseZ);
+            mouseBody.castShadow = true;
+            deskGroup.add(mouseBody);
+
+            const scrollWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.014, 12), brushedAlumMat);
+            scrollWheel.rotation.z = Math.PI / 2;
+            scrollWheel.position.set(mouseX, deskH + 0.061, mouseZ - 0.036);
+            deskGroup.add(scrollWheel);
+
+            // 8. Pair of Minimalist Matte-Black Studio Monitor Speakers
+            [-0.84, 0.98].forEach((offsetX, idx) => {
+                const spkX = deskX + offsetX;
+                const spkZ = deskZ - 0.16;
+                const spkGroup = new THREE.Group();
+                spkGroup.position.set(spkX, deskH + 0.135, spkZ);
+                spkGroup.rotation.y = idx === 0 ? 0.22 : -0.28;
+
+                const cabinet = new THREE.Mesh(new THREE.BoxGeometry(0.145, 0.22, 0.16), matteBlackMat);
+                cabinet.castShadow = true;
+                spkGroup.add(cabinet);
+
+                const woofer = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.044, 0.012, 20), darkAlumMat);
+                woofer.rotation.x = Math.PI / 2;
+                woofer.position.set(0, -0.032, 0.078);
+                spkGroup.add(woofer);
+
+                const tweeter = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.020, 0.012, 16), brushedAlumMat);
+                tweeter.rotation.x = Math.PI / 2;
+                tweeter.position.set(0, 0.050, 0.078);
+                spkGroup.add(tweeter);
+
+                deskGroup.add(spkGroup);
+            });
+
+            // 9. Minimalist Ceramic Coffee Mug & Architectural Desk Lamp
+            const mugX = deskX + 0.56;
+            const mugZ = deskZ + 0.18;
+            const mugBody = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.038, 0.095, 20), ceramicMat);
+            mugBody.position.set(mugX, deskH + 0.07, mugZ);
+            mugBody.castShadow = true;
+            deskGroup.add(mugBody);
+
+            const coffeeTop = new THREE.Mesh(
+                new THREE.CircleGeometry(0.037, 18),
+                new THREE.MeshStandardMaterial({ color: '#3E2723', roughness: 0.2 })
+            );
+            coffeeTop.rotation.x = -Math.PI / 2;
+            coffeeTop.position.set(mugX, deskH + 0.112, mugZ);
+            deskGroup.add(coffeeTop);
+
+            const lampX = deskX - 0.88;
+            const lampZ = deskZ + 0.18;
+            const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.022, 20), matteBlackMat);
+            lampBase.position.set(lampX, deskH + 0.034, lampZ);
+            deskGroup.add(lampBase);
+
+            const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.42, 12), brushedAlumMat);
+            lampStem.position.set(lampX, deskH + 0.24, lampZ);
+            deskGroup.add(lampStem);
+
+            const lampShade = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.068, 0.11, 20), matteBlackMat);
+            lampShade.position.set(lampX + 0.07, deskH + 0.43, lampZ - 0.04);
+            lampShade.rotation.z = -0.55;
+            deskGroup.add(lampShade);
+
+            // 10. Aluminum & Tempered Glass Workstation PC Tower (Under Right Side of Desk)
+            const towerX = deskX + 0.78;
+            const towerZ = deskZ + 0.02;
+            const towerW = 0.24;
+            const towerH = 0.48;
+            const towerD = 0.46;
+
+            const towerBody = new THREE.Mesh(new THREE.BoxGeometry(towerW, towerH, towerD), darkAlumMat);
+            towerBody.position.set(towerX, towerH / 2 + 0.01, towerZ);
+            towerBody.castShadow = true;
+            deskGroup.add(towerBody);
+
+            const frontPanel = new THREE.Mesh(new THREE.BoxGeometry(towerW - 0.02, towerH - 0.02, 0.018), brushedAlumMat);
+            frontPanel.position.set(towerX, towerH / 2 + 0.01, towerZ + towerD / 2 + 0.008);
+            deskGroup.add(frontPanel);
+
+            // Tempered glass left side panel with spinning warm amber cooling fans
+            const glassPanel = new THREE.Mesh(
+                new THREE.PlaneGeometry(towerD - 0.05, towerH - 0.06),
+                new THREE.MeshStandardMaterial({
+                    color: '#18181B',
+                    roughness: 0.1,
+                    metalness: 0.2,
+                    transparent: true,
+                    opacity: 0.55
+                })
+            );
+            glassPanel.rotation.y = -Math.PI / 2;
+            glassPanel.position.set(towerX - towerW / 2 - 0.002, towerH / 2 + 0.01, towerZ);
+            deskGroup.add(glassPanel);
+
+            pcFanMeshes = [];
+            [0.14, 0.34].forEach(fy => {
+                const fanRing = new THREE.Mesh(
+                    new THREE.TorusGeometry(0.055, 0.006, 10, 24),
+                    new THREE.MeshBasicMaterial({ color: '#F59E0B' })
+                );
+                fanRing.rotation.y = Math.PI / 2;
+                fanRing.position.set(towerX - towerW / 2 + 0.015, fy, towerZ + 0.08);
+                deskGroup.add(fanRing);
+
+                const fanBlades = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.09, 0.018), brushedAlumMat);
+                fanBlades.position.copy(fanRing.position);
+                deskGroup.add(fanBlades);
+                pcFanMeshes.push(fanBlades);
+            });
+
+            scene.add(deskGroup);
+        }
+
+        // Helper to create a smooth tapered limb segment using LatheGeometry for organic musculature
+        function createOrganicLimb(pStart, pEnd, rTop, rMid, rBottom, material) {
+            const dir = new THREE.Vector3().subVectors(pEnd, pStart);
+            const len = dir.length();
+            const mid = new THREE.Vector3().addVectors(pStart, pEnd).multiplyScalar(0.5);
+
+            const profile = [
+                new THREE.Vector2(0.001, -len * 0.5),
+                new THREE.Vector2(rBottom, -len * 0.46),
+                new THREE.Vector2(rBottom * 1.04, -len * 0.25),
+                new THREE.Vector2(rMid, 0),
+                new THREE.Vector2(rTop * 1.03, len * 0.28),
+                new THREE.Vector2(rTop, len * 0.46),
+                new THREE.Vector2(0.001, len * 0.5)
+            ];
+            const geo = new THREE.LatheGeometry(profile, 24);
+            const mesh = new THREE.Mesh(geo, material);
+            mesh.position.copy(mid);
+            mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            return mesh;
+        }
+
+        // Fallback for CapsuleGeometry in Three.js r128
+        function createCapsuleGeo(radius, length) {
+            if (THREE.CapsuleGeometry) return new THREE.CapsuleGeometry(radius, length, 4, 16);
+            const profile = [];
+            const segments = 8;
+            const halfL = length / 2;
+            // Top dome
+            for (let i = 0; i <= segments; i++) {
+                const angle = Math.PI / 2 - (i / segments) * (Math.PI / 2);
+                profile.push(new THREE.Vector2(Math.cos(angle) * radius, halfL + Math.sin(angle) * radius));
+            }
+            // Bottom dome
+            for (let i = 0; i <= segments; i++) {
+                const angle = -(i / segments) * (Math.PI / 2);
+                profile.push(new THREE.Vector2(Math.cos(angle) * radius, -halfL + Math.sin(angle) * radius));
+            }
+            return new THREE.LatheGeometry(profile, 16);
+        }
+
+        // Floating 3D "WELCOME!" speech badge next to the developer's waving hand
+        function createWelcome3DBadge() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 96;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#1A1A1A';
+            ctx.beginPath();
+            ctx.roundRect(8, 8, 240, 80, 20);
+            ctx.fill();
+
+            ctx.strokeStyle = '#D97706';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.fillStyle = '#FDE68A';
+            ctx.font = '700 32px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('WELCOME!', 128, 50);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0 });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(0.46, 0.17, 1);
+            return sprite;
+        }
+
+        // Ergonomic swivel studio chair + organically sculpted 3D human developer seated on the left side of the PC
+        function buildChairAndCharacter() {
+            const group = new THREE.Group();
+            group.position.set(-0.15, 0, -0.05);
+
+            // Swivel Assembly (so the whole chair + char rotates)
+            const swivelGroup = new THREE.Group();
+            group.add(swivelGroup);
+
+            // --- Chair (White modern chair) ---
+            const chairGroup = new THREE.Group();
+            const chairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+            const darkMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
+            
+            const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.5), chairMat);
+            seat.position.set(0, 0.45, 0);
+            chairGroup.add(seat);
+            
+            const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.08), chairMat);
+            backrest.position.set(0, 0.75, -0.22);
+            chairGroup.add(backrest);
+            
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), darkMat);
+            pole.position.y = 0.2;
+            chairGroup.add(pole);
+            
+            for(let i = 0; i < 4; i++) {
+                const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.5), darkMat);
+                leg.position.y = 0.02;
+                leg.rotation.y = (Math.PI / 4) * i;
+                chairGroup.add(leg);
+            }
+            swivelGroup.add(chairGroup);
+
+            // --- Character (Claymorphism style) ---
+            const charGroup = new THREE.Group();
+            charGroup.position.y = 0.49; // Sit on the chair seat
+            
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcdb2, roughness: 0.8, metalness: 0.1 });
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x4a3018, roughness: 0.9, metalness: 0.1 });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const shoeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.7 });
+            const shoeBlackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
+            
+            // TorsoPivot (Black t-shirt)
+            const torsoPivot = new THREE.Group();
+            torsoPivot.position.y = 0.25;
+            charGroup.add(torsoPivot);
+
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.45, 32), shirtMat);
+            torsoPivot.add(torso);
+            
+            // HeadPivot (Big round spherical head)
+            const headPivot = new THREE.Group();
+            headPivot.position.set(0, 0.4, 0);
+            torsoPivot.add(headPivot);
+            
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), skinMat);
+            headPivot.add(head);
+            
+            // Hair (Base cap + swooping bangs)
+            const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.29, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2.2), hairMat);
+            hairBase.position.y = 0.02;
+            headPivot.add(hairBase);
+            
+            const bangs = new THREE.Mesh(createCapsuleGeo(0.09, 0.25), hairMat);
+            bangs.rotation.z = Math.PI / 2;
+            bangs.rotation.x = Math.PI / 6;
+            bangs.position.set(0.08, 0.18, 0.23);
+            headPivot.add(bangs);
+            
+            // Eyes (Simple black dots)
+            const eyeGeo = new THREE.SphereGeometry(0.022, 16, 16);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.1, 0.03, 0.26);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.1, 0.03, 0.26);
+            headPivot.add(leftEye, rightEye);
+            
+            // Smile
+            const smileGeo = new THREE.TorusGeometry(0.06, 0.012, 16, 32, Math.PI * 0.8);
+            const smileTeeth = new THREE.Mesh(smileGeo, eyeMat);
+            smileTeeth.rotation.x = Math.PI;
+            smileTeeth.rotation.z = -Math.PI * 0.4;
+            smileTeeth.position.set(0, -0.05, 0.27);
+            headPivot.add(smileTeeth);
+            
+            // Left Arm 
+            const leftShoulderPivot = new THREE.Group();
+            leftShoulderPivot.position.set(0.25, 0.1, 0);
+            leftShoulderPivot.rotation.x = 0.6;
+            torsoPivot.add(leftShoulderPivot);
+
+            const leftArm = new THREE.Mesh(createCapsuleGeo(0.06, 0.28), skinMat);
+            leftArm.position.y = -0.15;
+            leftShoulderPivot.add(leftArm);
+            
+            // Right Arm (Waving Arm Rig compatible with characterRig)
+            const rightShoulderPivot = new THREE.Group();
+            rightShoulderPivot.position.set(-0.25, 0.1, 0);
+            torsoPivot.add(rightShoulderPivot);
+
+            const rightElbowPivot = new THREE.Group();
+            rightElbowPivot.position.y = -0.15;
+            rightShoulderPivot.add(rightElbowPivot);
+
+            const rightWristPivot = new THREE.Group();
+            rightWristPivot.position.y = -0.15;
+            rightElbowPivot.add(rightWristPivot);
+
+            // Right Arm Meshes
+            const rightUpperArm = new THREE.Mesh(createCapsuleGeo(0.055, 0.15), skinMat);
+            rightUpperArm.position.y = -0.075;
+            rightShoulderPivot.add(rightUpperArm);
+
+            const rightLowerArm = new THREE.Mesh(createCapsuleGeo(0.05, 0.15), skinMat);
+            rightLowerArm.position.y = -0.075;
+            rightElbowPivot.add(rightLowerArm);
+
+            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.065), skinMat);
+            rightHand.position.y = -0.02;
+            rightWristPivot.add(rightHand);
+            
+            // Pre-pose right arm slightly so it rests
+            rightShoulderPivot.rotation.x = 0.5;
+
+            // Legs (Tubular pants)
+            const leftThigh = new THREE.Mesh(createCapsuleGeo(0.09, 0.22), pantsMat);
+            leftThigh.rotation.x = Math.PI / 2;
+            leftThigh.position.set(0.12, 0.05, 0.15);
+            charGroup.add(leftThigh);
+            
+            const leftCalf = new THREE.Mesh(createCapsuleGeo(0.08, 0.25), pantsMat);
+            leftCalf.position.set(0.12, -0.1, 0.25);
+            charGroup.add(leftCalf);
+            
+            const rightThigh = new THREE.Mesh(createCapsuleGeo(0.09, 0.22), pantsMat);
+            rightThigh.rotation.x = Math.PI / 2;
+            rightThigh.position.set(-0.12, 0.05, 0.15);
+            charGroup.add(rightThigh);
+            
+            const rightCalf = new THREE.Mesh(createCapsuleGeo(0.08, 0.25), pantsMat);
+            rightCalf.position.set(-0.12, -0.1, 0.25);
+            charGroup.add(rightCalf);
+            
+            // Shoes (Black and white sneakers)
+            const createShoe = () => {
+                const shoeGroup = new THREE.Group();
+                const sole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.22), shoeWhiteMat);
+                sole.position.y = -0.02;
+                shoeGroup.add(sole);
+                const upper = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.2), shoeBlackMat);
+                upper.position.y = 0.04;
+                shoeGroup.add(upper);
+                return shoeGroup;
+            };
+            
+            const leftShoe = createShoe();
+            leftShoe.position.set(0.12, -0.25, 0.3);
+            charGroup.add(leftShoe);
+            
+            const rightShoe = createShoe();
+            rightShoe.position.set(-0.12, -0.25, 0.3);
+            charGroup.add(rightShoe);
+
+            swivelGroup.add(charGroup);
+
+            // Enable shadows for the stylized 3D look
+            chairGroup.traverse(child => { if(child.isMesh) { child.castShadow = true; child.receiveShadow = true; }});
+            charGroup.traverse(child => { if(child.isMesh) { child.castShadow = true; child.receiveShadow = true; }});
+
+            // Floating 3D "WELCOME!" speech badge beside him
+            const welcomeBadge = createWelcome3DBadge();
+            welcomeBadge.position.set(0.45, 1.38, -0.08);
+            swivelGroup.add(welcomeBadge);
+
+            const hitBox = new THREE.Mesh(
+                new THREE.BoxGeometry(0.65, 1.4, 0.65),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitBox.position.set(0, 0.7, 0);
+            hitBox.userData = {
+                type: 'character',
+                data: {
+                    title: 'Hi, my name is David.',
+                    subtitle: 'クリックすると挨拶アニメーションを再生します'
+                }
+            };
+            group.add(hitBox);
+            interactiveObjects.push(hitBox);
+
+            scene.add(group);
+            
+            // Map elements to characterRig exactly as animateThreeStudio expects
+            characterRig = {
+                rootGroup: group,
+                swivelGroup,
+                torsoPivot,
+                headPivot,
+                smileTeeth,
+                welcomeBadge,
+                leftShoulderPivot,
+                rightShoulderPivot,
+                rightElbowPivot,
+                rightWristPivot
+            };
+        }
+
+        function triggerDeveloperGreeting() {
+            greetingState.active = true;
+            greetingState.startTime = performance.now() * 0.001;
+        }
+
+        function updateMonitorCanvas() {
+            monitorAnimTick += 0.025;
+
+            if (monitorCtx && monitorTexture) {
+                const ctx = monitorCtx;
+                const W = 1024;
+                const H = 560;
+
+                ctx.fillStyle = '#0F172A';
+                ctx.fillRect(0, 0, W, H);
+
+                ctx.fillStyle = '#1E293B';
+                ctx.fillRect(0, 0, W, 28);
+                ctx.fillStyle = '#F8FAFC';
+                ctx.font = '600 13px Inter, sans-serif';
+                ctx.fillText('STUDIO OS  |  AutomatePipeline.py  —  Active', 18, 19);
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '12px monospace';
+                ctx.fillText('CPU: 14%   MEM: 4.2GB   API: CONNECTED', W - 310, 19);
+
+                const lx = 18, ly = 42, lw = 490, lh = 500;
+                ctx.fillStyle = '#18181B';
+                ctx.fillRect(lx, ly, lw, lh);
+                ctx.strokeStyle = '#3F3F46';
+                ctx.strokeRect(lx, ly, lw, lh);
+
+                ctx.fillStyle = '#27272A';
+                ctx.fillRect(lx, ly, lw, 30);
+                ['#EF4444', '#F59E0B', '#10B981'].forEach((col, i) => {
+                    ctx.fillStyle = col;
+                    ctx.beginPath();
+                    ctx.arc(lx + 18 + i * 16, ly + 15, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.fillStyle = '#D4D4D8';
+                ctx.font = '12px monospace';
+                ctx.fillText('claude-code — python3 automate_pipeline.py', lx + 74, ly + 19);
+
+                const cycle = (monitorAnimTick % 4) / 4;
+                ctx.fillStyle = '#27272A';
+                ctx.fillRect(lx + 20, ly + 48, lw - 40, 14);
+                ctx.fillStyle = '#F59E0B';
+                ctx.fillRect(lx + 20, ly + 48, (lw - 40) * cycle, 14);
+
+                const codeLines = [
+                    { color: '#60A5FA', text: 'def sync_enterprise_csv_to_postgres():' },
+                    { color: '#A1A1AA', text: '    # 1. Fetch & normalize multi-branch reports' },
+                    { color: '#34D399', text: '    files = gmail_api.fetch_attachments(query="daily_sales")' },
+                    { color: '#E4E4E7', text: '    df = pandas.concat([clean_schema(f) for f in files])' },
+                    { color: '#FBBF24', text: '    anomalies = ai_validator.detect_outliers(df)' },
+                    { color: '#34D399', text: '    db.upsert_batch("sales_ledger", df, lock=True)' },
+                    { color: '#A1A1AA', text: '--------------------------------------------------------' },
+                    { color: '#38BDF8', text: `[EXEC] Rows processed: ${Math.floor(12480 * cycle)} / 12,480` },
+                    { color: '#34D399', text: '[OK]   Schema normalized (UTF-8) & duplicates quarantined' },
+                    { color: '#FBBF24', text: `[PERF] Elapsed: ${(3.8 * cycle).toFixed(2)}s  (Manual: 120m -> -99.9%)` }
+                ];
+
+                ctx.font = '13px monospace';
+                codeLines.forEach((line, idx) => {
+                    ctx.fillStyle = line.color;
+                    ctx.fillText(line.text, lx + 20, ly + 96 + idx * 32);
+                });
+
+                ctx.fillStyle = '#27272A';
+                ctx.fillRect(lx + 20, ly + 432, lw - 40, 46);
+                ctx.fillStyle = '#FDE68A';
+                ctx.font = '600 14px "Noto Sans JP", sans-serif';
+                ctx.fillText('▶ モニターをクリックして実演デモを起動', lx + 36, ly + 460);
+
+                const rx = 524, ry = 42, rw = 482, rh = 500;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(rx, ry, rw, rh);
+
+                ctx.fillStyle = '#F4F4F5';
+                ctx.fillRect(rx, ry, rw, 34);
+                ctx.fillStyle = '#18181B';
+                ctx.font = '600 13px "Noto Sans JP", Inter, sans-serif';
+                ctx.fillText('自動集計ダッシュボード // Real-Time Ledger Sync', rx + 16, ry + 22);
+
+                const kpis = [
+                    { label: '月間削減工数', val: '45.0 時間', col: '#059669' },
+                    { label: '処理精度', val: '100.0 %', col: '#2563EB' },
+                    { label: '処理速度', val: '3.8 秒', col: '#D97706' }
+                ];
+                kpis.forEach((kpi, i) => {
+                    const kx = rx + 16 + i * 154;
+                    const ky = ry + 48;
+                    ctx.fillStyle = '#F8FAFC';
+                    ctx.fillRect(kx, ky, 144, 68);
+                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.strokeRect(kx, ky, 144, 68);
+
+                    ctx.fillStyle = '#64748B';
+                    ctx.font = '11px "Noto Sans JP", sans-serif';
+                    ctx.fillText(kpi.label, kx + 12, ky + 24);
+
+                    ctx.fillStyle = kpi.col;
+                    ctx.font = '700 18px Inter, sans-serif';
+                    ctx.fillText(kpi.val, kx + 12, ky + 52);
+                });
+
+                ctx.fillStyle = '#1E293B';
+                ctx.fillRect(rx + 16, ry + 132, rw - 32, 30);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '600 12px monospace';
+                ctx.fillText('ID       BRANCH        RECORDS     STATUS', rx + 28, ry + 151);
+
+                const tableRows = [
+                    ['#1041', 'TOKYO-HQ', '4,120', 'SYNCED ✓'],
+                    ['#1042', 'OSAKA-02', '3,290', 'SYNCED ✓'],
+                    ['#1043', 'NAGOYA-01', '2,180', 'SYNCED ✓'],
+                    ['#1044', 'FUKUOKA-03', '1,890', 'SYNCED ✓'],
+                    ['#1045', 'SAPPORO-01', '1,000', cycle > 0.5 ? 'SYNCED ✓' : 'VERIFYING...']
+                ];
+
+                tableRows.forEach((r, idx) => {
+                    const rowY = ry + 162 + idx * 36;
+                    ctx.fillStyle = idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+                    ctx.fillRect(rx + 16, rowY, rw - 32, 36);
+                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.strokeRect(rx + 16, rowY, rw - 32, 36);
+
+                    ctx.fillStyle = '#334155';
+                    ctx.font = '12px monospace';
+                    ctx.fillText(`${r[0]}    ${r[1].padEnd(11, ' ')}   ${r[2].padEnd(8, ' ')}`, rx + 28, rowY + 23);
+
+                    ctx.fillStyle = r[3].includes('SYNCED') ? '#059669' : '#D97706';
+                    ctx.font = '700 12px monospace';
+                    ctx.fillText(r[3], rx + 345, rowY + 23);
+                });
+
+                ctx.fillStyle = '#64748B';
+                ctx.font = '11px "Noto Sans JP", sans-serif';
+                ctx.fillText('業務工数比較: 手作業 (グレー) vs 自動化後 (ゴールド)', rx + 16, ry + 370);
+
+                [140, 165, 150, 180, 160].forEach((barH, i) => {
+                    const bx = rx + 32 + i * 86;
+                    const baseLine = ry + 480;
+                    ctx.fillStyle = '#CBD5E1';
+                    ctx.fillRect(bx, baseLine - barH * 0.55, 26, barH * 0.55);
+                    ctx.fillStyle = '#D97706';
+                    ctx.fillRect(bx + 32, baseLine - 8, 26, 8);
+                });
+
+                monitorTexture.needsUpdate = true;
+            }
+
+            if (subMonitorCtx && subMonitorTexture) {
+                const sctx = subMonitorCtx;
+                sctx.fillStyle = '#111827';
+                sctx.fillRect(0, 0, 360, 580);
+
+                sctx.fillStyle = '#1F2937';
+                sctx.fillRect(0, 0, 360, 42);
+                sctx.fillStyle = '#F9FAFB';
+                sctx.font = '600 13px monospace';
+                sctx.fillText('[ AWS CLOUDWATCH & API ]', 18, 26);
+
+                const nodes = [
+                    { name: 'ALB / API Gateway', metric: '99.99% Uptime | 42ms', col: '#10B981' },
+                    { name: 'EC2 Auto-Scaling', metric: 'CPU 18.4% | Healthy', col: '#3B82F6' },
+                    { name: 'RDS PostgreSQL', metric: 'Row Lock: Active | 0 Err', col: '#8B5CF6' },
+                    { name: 'Lambda / Python Worker', metric: 'Queue: 0 | Auto-Sync', col: '#F59E0B' }
+                ];
+
+                nodes.forEach((node, i) => {
+                    const ny = 66 + i * 116;
+                    sctx.fillStyle = '#1F2937';
+                    sctx.fillRect(22, ny, 316, 86);
+                    sctx.strokeStyle = node.col;
+                    sctx.lineWidth = 2;
+                    sctx.strokeRect(22, ny, 316, 86);
+
+                    sctx.fillStyle = '#F3F4F6';
+                    sctx.font = '600 15px Inter, sans-serif';
+                    sctx.fillText(node.name, 38, ny + 34);
+
+                    sctx.fillStyle = node.col;
+                    sctx.font = '13px monospace';
+                    sctx.fillText(node.metric, 38, ny + 62);
+
+                    if (i < nodes.length - 1) {
+                        sctx.strokeStyle = '#4B5563';
+                        sctx.beginPath();
+                        sctx.moveTo(180, ny + 86);
+                        sctx.lineTo(180, ny + 116);
+                        sctx.stroke();
+                    }
+                });
+
+                subMonitorTexture.needsUpdate = true;
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. THREE.JS INTERACTION & CAMERA CONTROLS
+        // ---------------------------------------------------------------------
+        function onPointerMove(event) {
+            if (!renderer || !camera) return;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactiveObjects, false);
+
+            const tooltip = document.getElementById('hover-tooltip');
+            const tooltipCat = document.getElementById('tooltip-category');
+            const tooltipTitle = document.getElementById('tooltip-title');
+
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                if (hoveredObject !== hit) {
+                    if (hoveredObject && hoveredObject.userData.type === 'book' && selectedObject !== hoveredObject) {
+                        hoveredObject.userData.targetZ = hoveredObject.userData.baseZ;
+                    }
+                    hoveredObject = hit;
+                    if (hoveredObject.userData.type === 'book') {
+                        hoveredObject.userData.targetZ = hoveredObject.userData.baseZ + 0.14;
+                    }
+                }
+
+                document.body.style.cursor = 'pointer';
+                if (tooltip && tooltipCat && tooltipTitle) {
+                    tooltip.classList.remove('hidden');
+                    tooltip.style.left = `${event.clientX + 14}px`;
+                    tooltip.style.top = `${event.clientY + 14}px`;
+
+                    if (hit.userData.type === 'project') {
+                        tooltipCat.textContent = hit.userData.data.tag;
+                        tooltipTitle.textContent = hit.userData.data.title;
+                    } else if (hit.userData.type === 'book') {
+                        tooltipCat.textContent = hit.userData.data.tag;
+                        tooltipTitle.textContent = hit.userData.data.title;
+                    } else if (hit.userData.type === 'character') {
+                        tooltipCat.textContent = '[ STUDIO ENGINEER // 15+ YEARS ]';
+                        tooltipTitle.textContent = hit.userData.data.title;
+                    } else {
+                        tooltipCat.textContent = '[ WORKSTATION MONITOR ]';
+                        tooltipTitle.textContent = hit.userData.data.title;
+                    }
+                }
+            } else {
+                if (hoveredObject) {
+                    if (hoveredObject.userData.type === 'book' && selectedObject !== hoveredObject) {
+                        hoveredObject.userData.targetZ = hoveredObject.userData.baseZ;
+                    }
+                    hoveredObject = null;
+                }
+                document.body.style.cursor = 'default';
+                if (tooltip) tooltip.classList.add('hidden');
+            }
+        }
+
+        function onCanvasClick() {
+            if (!hoveredObject) return;
+            selectedObject = hoveredObject;
+
+            if (hoveredObject.userData.focusPos && hoveredObject.userData.focusTarget) {
+                targetCamPos.copy(hoveredObject.userData.focusPos);
+                targetLookAt.copy(hoveredObject.userData.focusTarget);
+                isCameraAnimating = true;
+            }
+
+            if (hoveredObject.userData.type === 'monitor') {
+                switchTab('automation');
+                startScreeningDemo();
+            } else if (hoveredObject.userData.type === 'character') {
+                triggerDeveloperGreeting();
+            } else {
+                openDetailDrawer(hoveredObject.userData.type, hoveredObject.userData.data);
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if (!container || !camera || !renderer) return;
+            const width = container.clientWidth || window.innerWidth;
+            const height = container.clientHeight || (window.innerHeight - 64);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function resetCameraView() {
+            targetCamPos.copy(defaultCamPos);
+            targetLookAt.copy(defaultTargetPos);
+            isCameraAnimating = true;
+
+            if (selectedObject && selectedObject.userData.type === 'book') {
+                selectedObject.userData.targetZ = selectedObject.userData.baseZ;
+            }
+            selectedObject = null;
+        }
+
+        function focusZone(zone) {
+            if (zone === 'galleryLeft') {
+                targetCamPos.set(-0.76, 2.24, 1.45);
+                targetLookAt.set(-0.76, 2.24, -1.89);
+            } else if (zone === 'galleryRight') {
+                targetCamPos.set(3.72, 2.24, 1.45);
+                targetLookAt.set(3.72, 2.24, -1.89);
+            } else if (zone === 'bookshelf') {
+                targetCamPos.set(1.48, 2.55, 0.95);
+                targetLookAt.set(1.48, 2.48, -1.72);
+            } else if (zone === 'monitor') {
+                targetCamPos.set(1.44, 1.40, 0.55);
+                targetLookAt.set(1.48, 1.25, -1.05);
+            }
+            isCameraAnimating = true;
+        }
+
+        function animateThreeStudio() {
+            requestAnimationFrame(animateThreeStudio);
+
+            if (isCameraAnimating && camera && controls) {
+                camera.position.lerp(targetCamPos, 0.08);
+                controls.target.lerp(targetLookAt, 0.08);
+                if (
+                    camera.position.distanceTo(targetCamPos) < 0.02 &&
+                    controls.target.distanceTo(targetLookAt) < 0.02
+                ) {
+                    isCameraAnimating = false;
+                }
+            }
+
+            interactiveObjects.forEach(obj => {
+                if (obj.userData.type === 'book') {
+                    obj.position.z += (obj.userData.targetZ - obj.position.z) * 0.14;
+                }
+            });
+
+            pcFanMeshes.forEach(fan => {
+                fan.rotation.z += 0.12;
+            });
+
+            // Developer swivel-and-wave greeting animation
+            if (characterRig) {
+                const t = monitorAnimTick * 1.4;
+                let greetBlend = 0;
+                let waveAngle = 0;
+
+                if (greetingState.active) {
+                    const elapsed = performance.now() * 0.001 - greetingState.startTime;
+                    const dur = greetingState.duration;
+
+                    if (elapsed >= dur) {
+                        greetingState.active = false;
+                    } else {
+                        if (elapsed < 0.9) {
+                            const u = elapsed / 0.9;
+                            greetBlend = u * u * (3 - 2 * u);
+                        } else if (elapsed < 4.0) {
+                            greetBlend = 1.0;
+                            waveAngle = Math.sin((elapsed - 0.9) * 7.5) * 0.36;
+                        } else {
+                            const u = 1.0 - (elapsed - 4.0) / 1.0;
+                            greetBlend = u * u * (3 - 2 * u);
+                        }
+                    }
+                }
+
+                characterRig.swivelGroup.rotation.y = greetBlend * 2.55;
+                characterRig.torsoPivot.rotation.y = greetBlend * 0.25;
+                characterRig.torsoPivot.rotation.x = 0.06 + Math.sin(t) * 0.012 - greetBlend * 0.04;
+                characterRig.headPivot.rotation.y = greetBlend * 0.14 + (1 - greetBlend) * Math.sin(t * 0.45) * 0.06;
+                characterRig.headPivot.rotation.z = greetBlend * -0.05 + waveAngle * 0.07;
+
+                const smileScale = Math.max(0.01, greetBlend);
+                characterRig.smileTeeth.scale.set(smileScale, smileScale, 1);
+
+                characterRig.welcomeBadge.material.opacity = greetBlend;
+                characterRig.welcomeBadge.position.y = 1.38 + Math.sin(t * 2.0) * 0.015;
+
+                characterRig.rightShoulderPivot.rotation.x = greetBlend * 1.42 + (1 - greetBlend) * Math.cos(t * 4.8) * 0.016;
+                characterRig.rightShoulderPivot.rotation.z = greetBlend * -0.58;
+                characterRig.rightShoulderPivot.rotation.y = greetBlend * 0.22;
+
+                characterRig.rightElbowPivot.rotation.x = greetBlend * 1.22;
+                characterRig.rightElbowPivot.rotation.z = greetBlend * -0.25 + waveAngle;
+                characterRig.rightWristPivot.rotation.x = greetBlend * 0.65;
+                characterRig.rightWristPivot.rotation.z = waveAngle * 0.85;
+
+                characterRig.leftShoulderPivot.rotation.x = (1 - greetBlend) * Math.sin(t * 5.2) * 0.016;
+            }
+
+            updateMonitorCanvas();
+
+            if (controls) controls.update();
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. 2D UI NAVIGATION, DRAWERS & AUTOMATION DEMO LOGIC
+        // ---------------------------------------------------------------------
+        function switchTab(tabName) {
+            const views = ['studio', 'automation', 'career', 'contact'];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                const deskBtn = document.getElementById(`nav-${v}`);
+                const mobBtn = document.getElementById(`m-nav-${v}`);
+
+                if (el) {
+                    if (v === tabName) {
+                        el.classList.remove('hidden');
+                    } else {
+                        el.classList.add('hidden');
+                    }
+                }
+                if (deskBtn) {
+                    if (v === tabName) {
+                        deskBtn.className = 'tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium transition-all bg-white text-matteBlack shadow-sm';
+                    } else {
+                        deskBtn.className = 'tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium text-inkGray hover:text-matteBlack transition-all';
+                    }
+                }
+                if (mobBtn) {
+                    if (v === tabName) {
+                        mobBtn.className = 'px-2 py-1 rounded font-medium bg-white text-matteBlack shadow-sm';
+                    } else {
+                        mobBtn.className = 'px-2 py-1 rounded text-inkGray';
+                    }
+                }
+            });
+
+            if (tabName === 'studio') {
+                setTimeout(onWindowResize, 50);
+            }
+        }
+
+        function openDetailDrawer(type, item) {
+            const backdrop = document.getElementById('detail-drawer-backdrop');
+            const tagEl = document.getElementById('drawer-tag');
+            const titleEl = document.getElementById('drawer-title');
+            const visualEl = document.getElementById('drawer-visual');
+            const metaEl = document.getElementById('drawer-meta');
+            const descEl = document.getElementById('drawer-desc');
+            const bulletsEl = document.getElementById('drawer-bullets');
+
+            if (!backdrop) return;
+
+            tagEl.textContent = item.tag;
+            titleEl.textContent = item.title;
+
+            const bg = item.accentColor || item.spineColor || '#2C4A52';
+            visualEl.style.backgroundColor = bg;
+            visualEl.innerHTML = `
+                <div class="text-[11px] font-mono text-amber-200 uppercase tracking-wider">${item.tag}</div>
+                <div class="text-white font-medium text-base sm:text-lg">${item.subtitle || item.spineTitle}</div>
+                <div class="text-xs text-stone-200 font-mono">${item.stackValue}</div>
+            `;
+
+            metaEl.innerHTML = `
+                <div class="bg-white border border-subtleBorder rounded-xl p-3">
+                    <div class="text-[11px] text-inkGray">${item.metricLabel}</div>
+                    <div class="font-semibold text-matteBlack mt-0.5">${item.metricValue}</div>
+                </div>
+                <div class="bg-white border border-subtleBorder rounded-xl p-3">
+                    <div class="text-[11px] text-inkGray">${item.stackLabel}</div>
+                    <div class="font-semibold text-matteBlack mt-0.5">${item.stackValue}</div>
+                </div>
+            `;
+
+            descEl.textContent = item.desc;
+            bulletsEl.innerHTML = item.bullets.map(b => `<li>${b}</li>`).join('');
+
+            backdrop.classList.remove('hidden');
+        }
+
+        function closeDetailDrawer() {
+            const backdrop = document.getElementById('detail-drawer-backdrop');
+            if (backdrop) backdrop.classList.add('hidden');
+            if (selectedObject && selectedObject.userData.type === 'book') {
+                selectedObject.userData.targetZ = selectedObject.userData.baseZ;
+            }
+            selectedObject = null;
+        }
+
+        function openDirectoryModal() {
+            const modal = document.getElementById('directory-modal');
+            const projList = document.getElementById('index-projects-list');
+            const bookList = document.getElementById('index-books-list');
+
+            projList.innerHTML = projectsData.map((p, i) => `
+                <button onclick="closeDirectoryModal(); openDetailDrawer('project', projectsData[${i}])" class="w-full text-left p-3 rounded-xl bg-white hover:bg-studioWarm border border-subtleBorder transition-colors">
+                    <div class="text-[10px] font-mono text-oakWood">${p.tag}</div>
+                    <div class="text-xs font-medium text-matteBlack mt-0.5">${p.title}</div>
+                </button>
+            `).join('');
+
+            bookList.innerHTML = BOOKS_DATA.map((b, i) => `
+                <button onclick="closeDirectoryModal(); openDetailDrawer('book', BOOKS_DATA[${i}])" class="w-full text-left p-3 rounded-xl bg-white hover:bg-studioWarm border border-subtleBorder transition-colors">
+                    <div class="text-[10px] font-mono text-oakWood">${b.tag}</div>
+                    <div class="text-xs font-medium text-matteBlack mt-0.5">${b.title}</div>
+                </button>
+            `).join('');
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeDirectoryModal() {
+            const modal = document.getElementById('directory-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function selectAutomationScenario(idx) {
+            currentScenarioIdx = idx;
+            const scen = AUTOMATION_SCENARIOS[idx];
+
+            [0, 1, 2].forEach(i => {
+                const btn = document.getElementById(`scen-btn-${i}`);
+                if (!btn) return;
+                if (i === idx) {
+                    btn.className = 'scen-btn text-left p-4 rounded-xl border-2 border-matteBlack bg-white shadow-sm transition-all';
+                } else {
+                    btn.className = 'scen-btn text-left p-4 rounded-xl border border-subtleBorder bg-studioWarm/50 hover:bg-white transition-all';
+                }
+            });
+
+            document.getElementById('demo-case-tag').textContent = scen.tag;
+            document.getElementById('demo-case-title').textContent = scen.title;
+            document.getElementById('before-time').textContent = scen.beforeTime;
+            document.getElementById('after-time').textContent = scen.afterTime;
+
+            document.getElementById('before-steps-list').innerHTML = scen.beforeSteps.map(s => `
+                <li class="p-3 rounded-lg bg-white border border-subtleBorder">
+                    <span class="font-medium text-matteBlack block mb-0.5">${s.title}</span>
+                    ${s.desc}
+                </li>
+            `).join('');
+
+            resetPipelineUI();
+        }
+
+        function resetPipelineUI() {
+            demoTimeouts.forEach(t => clearTimeout(t));
+            demoTimeouts = [];
+
+            [1, 2, 3].forEach(n => {
+                const node = document.getElementById(`pipe-node-${n}`);
+                const stat = document.getElementById(`pipe-stat-${n}`);
+                if (node) node.className = 'p-3 rounded-lg border border-subtleBorder bg-studioWall transition-all';
+                if (stat) {
+                    stat.className = 'text-[11px] text-inkGray mt-1';
+                    stat.textContent = '待機中';
+                }
+            });
+
+            const term = document.getElementById('automation-terminal');
+            if (term) {
+                term.innerHTML = `
+                    <div class="text-stone-400">$ python3 automate_pipeline.py --case=0${currentScenarioIdx + 1}</div>
+                    <div class="text-stone-400">[SYSTEM] Ready. 「▶ 自動化プロセスを実行する」ボタンを押して動作を確認してください。</div>
+                `;
+            }
+        }
+
+        function startScreeningDemo() {
+            resetPipelineUI();
+            const scen = AUTOMATION_SCENARIOS[currentScenarioIdx];
+            const term = document.getElementById('automation-terminal');
+
+            term.innerHTML = `<div class="text-amber-300">$ python3 automate_pipeline.py --case=0${currentScenarioIdx + 1} --execute</div>`;
+
+            scen.logs.forEach((log, idx) => {
+                const t = setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = log.text.includes('SUCCESS') ? 'text-emerald-400 font-semibold' : 'text-stone-200';
+                    line.textContent = log.text;
+                    term.appendChild(line);
+                    term.scrollTop = term.scrollHeight;
+
+                    const stepNum = Math.min(3, Math.floor((idx / scen.logs.length) * 3) + 1);
+                    const node = document.getElementById(`pipe-node-${stepNum}`);
+                    const stat = document.getElementById(`pipe-stat-${stepNum}`);
+                    if (node && stat) {
+                        if (idx === scen.logs.length - 1) {
+                            [1, 2, 3].forEach(n => {
+                                document.getElementById(`pipe-node-${n}`).className = 'p-3 rounded-lg border border-emerald-500 bg-emerald-50/60 transition-all';
+                                const sEl = document.getElementById(`pipe-stat-${n}`);
+                                sEl.className = 'text-[11px] text-emerald-700 font-semibold mt-1';
+                                sEl.textContent = '完了 ✓';
+                            });
+                        } else {
+                            node.className = 'p-3 rounded-lg border border-oakWood bg-amber-50/60 transition-all';
+                            stat.className = 'text-[11px] text-oakWood font-medium mt-1';
+                            stat.textContent = '処理実行中...';
+                        }
+                    }
+                }, log.delay);
+                demoTimeouts.push(t);
+            });
+        }
+
+        function submitInquiryForm(event) {
+            event.preventDefault();
+            const feedback = document.getElementById('form-feedback');
+            if (feedback) {
+                feedback.classList.remove('hidden');
+            }
+            event.target.reset();
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. WELCOME CELEBRATION (FIRST VISIT & 3-HOUR RETURN INTERVAL)
+        // ---------------------------------------------------------------------
+        function checkAndTriggerWelcomeCelebration() {
+            const STORAGE_KEY = 'studio_portfolio_last_welcome_ts';
+            const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+            const now = Date.now();
+            let shouldCelebrate = false;
+
+            try {
+                const lastVisitRaw = localStorage.getItem(STORAGE_KEY);
+                if (!lastVisitRaw) {
+                    shouldCelebrate = true;
+                } else {
+                    const lastVisit = parseInt(lastVisitRaw, 10);
+                    if (isNaN(lastVisit) || (now - lastVisit) >= THREE_HOURS_MS) {
+                        shouldCelebrate = true;
+                    }
+                }
+                if (shouldCelebrate) {
+                    localStorage.setItem(STORAGE_KEY, String(now));
+                }
+            } catch (e) {
+                shouldCelebrate = true;
+            }
+
+            if (!shouldCelebrate) return;
+
+            const canvas = document.getElementById('welcome-petals-canvas');
+            const banner = document.getElementById('welcome-banner');
+            if (!canvas || !banner) return;
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.classList.remove('hidden');
+
+            banner.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                banner.classList.remove('opacity-0', '-translate-y-3');
+                banner.classList.add('opacity-100', 'translate-y-0');
+            });
+
+            const petalColors = [
+                'rgba(244, 194, 194, 0.88)',
+                'rgba(251, 224, 224, 0.92)',
+                'rgba(232, 165, 152, 0.85)',
+                'rgba(245, 213, 174, 0.85)',
+                'rgba(255, 248, 240, 0.90)'
+            ];
+
+            let petals = [];
+
+            function spawnPetalWave(count) {
+                for (let i = 0; i < count; i++) {
+                    petals.push({
+                        x: Math.random() * canvas.width,
+                        y: -20 - Math.random() * (canvas.height * 0.35),
+                        size: 6 + Math.random() * 7,
+                        speedY: 1.4 + Math.random() * 1.8,
+                        speedX: -0.6 + Math.random() * 1.2,
+                        swayFreq: 0.015 + Math.random() * 0.02,
+                        swayAmp: 0.8 + Math.random() * 1.4,
+                        phase: Math.random() * Math.PI * 2,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.05,
+                        flip: Math.random() * Math.PI,
+                        flipSpeed: 0.03 + Math.random() * 0.04,
+                        color: petalColors[Math.floor(Math.random() * petalColors.length)]
+                    });
+                }
+            }
+
+            spawnPetalWave(42);
+            setTimeout(() => spawnPetalWave(38), 1400);
+            setTimeout(() => spawnPetalWave(35), 2800);
+
+            setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', '-translate-y-3');
+                setTimeout(() => banner.classList.add('hidden'), 750);
+                triggerDeveloperGreeting();
+            }, 4600);
+
+            let animId;
+            function renderPetals() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = petals.length - 1; i >= 0; i--) {
+                    const p = petals[i];
+                    p.phase += p.swayFreq;
+                    p.y += p.speedY;
+                    p.x += p.speedX + Math.sin(p.phase) * p.swayAmp;
+                    p.rotation += p.rotSpeed;
+                    p.flip += p.flipSpeed;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    ctx.scale(1, Math.max(0.25, Math.abs(Math.cos(p.flip))));
+
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -p.size);
+                    ctx.bezierCurveTo(p.size * 0.85, -p.size * 0.6, p.size * 0.9, p.size * 0.6, 0, p.size);
+                    ctx.bezierCurveTo(-p.size * 0.9, p.size * 0.6, -p.size * 0.85, -p.size * 0.6, 0, -p.size);
+                    ctx.fill();
+                    ctx.restore();
+
+                    if (p.y > canvas.height + 30) {
+                        petals.splice(i, 1);
+                    }
+                }
+
+                if (petals.length > 0) {
+                    animId = requestAnimationFrame(renderPetals);
+                } else {
+                    cancelAnimationFrame(animId);
+                    canvas.classList.add('hidden');
+                }
+            }
+
+            renderPetals();
+        }
+
+        window.onload = function () {
+            initThreeStudio();
+            checkAndTriggerWelcomeCelebration();
+        };
+    </script>
+</body>
+</html>
