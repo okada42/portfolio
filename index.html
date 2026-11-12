@@ -905,7 +905,7 @@
         let targetLookAt = HAS_THREE ? defaultTargetPos.clone() : null;
 
         // Closed room: the camera always stays inside these bounds, so nothing outside is ever visible.
-        const STUDIO_ROOM = { left: -2.5, right: 5.46, back: -2.05, front: 6.4, height: 4.8 };
+        const STUDIO_ROOM = { left: -1.75, right: 4.75, back: -2.05, front: 6.0, height: 4.5 };
         const CAM_MARGIN = 0.35;
 
         // Responsive framing: narrow/portrait screens get a wider lens (vertical FOV grows so the
@@ -996,10 +996,10 @@
             });
 
             // Studio Lighting
-            const ambientLight = new THREE.AmbientLight(0xfffdf9, 0.72);
+            const ambientLight = new THREE.AmbientLight(0xfffdf9, 0.5);
             scene.add(ambientLight);
 
-            const dirLight = new THREE.DirectionalLight(0xfff8ee, 0.75);
+            const dirLight = new THREE.DirectionalLight(0xfff8ee, 0.6);
             dirLight.position.set(4.5, 7.5, 5.5);
             dirLight.castShadow = true;
             dirLight.shadow.mapSize.width = 2048;
@@ -1013,30 +1013,18 @@
             dirLight.shadow.bias = -0.0005;
             scene.add(dirLight);
 
-            // Symmetrical Gallery Spotlights illuminating Left Gallery (-0.76), Center Bookshelf (1.48), and Right Gallery (3.72)
-            const spotLeft = new THREE.SpotLight(0xfff3e0, 0.52, 10, Math.PI / 4, 0.5, 1);
-            spotLeft.position.set(-0.76, 4.3, 0.85);
-            spotLeft.target.position.set(-0.76, 2.20, -1.89);
-            scene.add(spotLeft);
-            scene.add(spotLeft.target);
-
-            const spotCenter = new THREE.SpotLight(0xfff4e2, 0.45, 9, Math.PI / 4, 0.5, 1);
-            spotCenter.position.set(1.48, 4.3, 0.85);
-            spotCenter.target.position.set(1.48, 2.34, -1.72);
-            scene.add(spotCenter);
-            scene.add(spotCenter.target);
-
-            const spotFrame1 = new THREE.SpotLight(0xfff3e0, 0.50, 10, Math.PI / 4, 0.5, 1);
-            spotFrame1.position.set(3.18, 4.3, 0.85);
-            spotFrame1.target.position.set(3.18, 2.20, -1.89);
-            scene.add(spotFrame1);
-            scene.add(spotFrame1.target);
-
-            const spotFrame2 = new THREE.SpotLight(0xfff3e0, 0.50, 10, Math.PI / 4, 0.5, 1);
-            spotFrame2.position.set(4.26, 4.3, 0.85);
-            spotFrame2.target.position.set(4.26, 2.20, -1.89);
-            scene.add(spotFrame2);
-            scene.add(spotFrame2.target);
+            // Gallery picture lights: warm, focused beams on the frame wall and bookshelf
+            const addSpot = (intensity, angle, px, py, pz, tx, ty, tz) => {
+                const sp = new THREE.SpotLight(0xffe9c7, intensity, 9, angle, 0.55, 1.2);
+                sp.position.set(px, py, pz);
+                sp.target.position.set(tx, ty, tz);
+                scene.add(sp); scene.add(sp.target);
+                return sp;
+            };
+            addSpot(1.0, Math.PI / 7, 0.76, 4.2, 0.4, 0.76, 2.25, -1.9);   // left frame group
+            addSpot(1.0, Math.PI / 7, 2.20, 4.2, 0.4, 2.20, 2.25, -1.9);   // right frame group
+            addSpot(0.6, Math.PI / 9, 1.48, 4.2, 0.2, 1.48, 3.2, -1.75);   // bookshelf
+            addSpot(0.35, Math.PI / 6, 1.0, 4.2, 1.5, 0.9, 0.6, -0.6);     // desk + developer
 
             // Build Architectural Studio Environment
             buildStudioArchitecture();
@@ -1079,19 +1067,20 @@
             gridHelper.position.set(roomCX, 0.002, sideCZ);
             scene.add(gridHelper);
 
-            const wallMat = new THREE.MeshStandardMaterial({ color: '#F8F7F4', roughness: 0.92 });
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomW + 0.25, 4.8, 0.25), wallMat);
-            backWall.position.set(roomCX, 2.4, ROOM.back);
+            const wallMat = new THREE.MeshStandardMaterial({ color: '#F2ECE3', roughness: 0.92 });      // side/front walls: warm off-white
+            const backWallMat = new THREE.MeshStandardMaterial({ color: '#E7DED1', roughness: 0.92 });  // back wall: a shade deeper
+            const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomW + 0.25, ROOM.height, 0.25), backWallMat);
+            backWall.position.set(roomCX, ROOM.height / 2, ROOM.back);
             backWall.receiveShadow = true;
             scene.add(backWall);
 
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, sideLen), wallMat);
-            leftWall.position.set(ROOM.left, 2.4, sideCZ);
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, ROOM.height, sideLen), wallMat);
+            leftWall.position.set(ROOM.left, ROOM.height / 2, sideCZ);
             leftWall.receiveShadow = true;
             scene.add(leftWall);
 
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 4.8, sideLen), wallMat);
-            rightWall.position.set(ROOM.right, 2.4, sideCZ);
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, ROOM.height, sideLen), wallMat);
+            rightWall.position.set(ROOM.right, ROOM.height / 2, sideCZ);
             rightWall.receiveShadow = true;
             scene.add(rightWall);
 
@@ -1153,6 +1142,64 @@
             addFloorRect(1.15, -0.35, 5.0, 3.0, 0.035, accentMats[0], 0.004);
             addFloorRect(1.15, -0.35, 4.8, 2.8, 0.014, accentMats[1], 0.005);
             addFloorRect(1.15, -0.35, 4.66, 2.66, 0.014, accentMats[2], 0.005);
+
+            const oakLineMat = new THREE.MeshStandardMaterial({ color: '#8B6F4E', roughness: 0.6 });
+            const wallFrontZ = ROOM.back + 0.13;
+
+            // Gallery feature panel: deep slate-green behind the 8 frames so the white mattes stand out
+            const panelW = 3.2, panelH = 1.36, panelCX = 1.48, panelCY = 2.25;
+            const panel = new THREE.Mesh(new THREE.BoxGeometry(panelW, panelH, 0.01),
+                new THREE.MeshStandardMaterial({ color: '#56625C', roughness: 0.9 }));
+            panel.position.set(panelCX, panelCY, wallFrontZ + 0.006);
+            panel.receiveShadow = true;
+            scene.add(panel);
+            // thin oak border around the panel
+            [[0, panelH / 2, panelW + 0.04, 0.02], [0, -panelH / 2, panelW + 0.04, 0.02], [-panelW / 2, 0, 0.02, panelH], [panelW / 2, 0, 0.02, panelH]]
+                .forEach(([dx, dy, w, h]) => {
+                    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.016), oakLineMat);
+                    m.position.set(panelCX + dx, panelCY + dy, wallFrontZ + 0.01);
+                    scene.add(m);
+                });
+
+            // Vertical double pinstripes flanking the gallery panel (amber + sage)
+            [-1, 1].forEach(side => {
+                [[0.14, accentMats[0], 0.012], [0.19, accentMats[2], 0.008]].forEach(([off, mat, w]) => {
+                    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.3, 0.008), mat);
+                    m.position.set(panelCX + side * (panelW / 2 + off), 2.3, wallFrontZ + 0.004);
+                    scene.add(m);
+                });
+            });
+
+            // Dotted line under the stripe band (terracotta dots)
+            const dotGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.006, 12);
+            dotGeo.rotateX(Math.PI / 2);
+            const dotCount = Math.floor((roomW - 0.4) / 0.12);
+            const dots = new THREE.InstancedMesh(dotGeo, accentMats[1], dotCount);
+            const dm = new THREE.Matrix4();
+            for (let i = 0; i < dotCount; i++) {
+                dm.makeTranslation(ROOM.left + 0.25 + i * 0.12, 0.9, wallFrontZ + 0.004);
+                dots.setMatrixAt(i, dm);
+            }
+            scene.add(dots);
+
+            // Crown lines near the ceiling (oak + amber) on back and side walls
+            [[ROOM.height - 0.22, oakLineMat, 0.03], [ROOM.height - 0.3, accentMats[0], 0.012]].forEach(([y, mat, h]) => {
+                const back = new THREE.Mesh(new THREE.BoxGeometry(roomW - 0.25, h, 0.012), mat);
+                back.position.set(roomCX, y, wallFrontZ + 0.002);
+                scene.add(back);
+                [ROOM.left + 0.132, ROOM.right - 0.132].forEach(x => {
+                    const side = new THREE.Mesh(new THREE.BoxGeometry(0.012, h, sideLen - 0.13), mat);
+                    side.position.set(x, y, sideCZ + 0.065);
+                    scene.add(side);
+                });
+            });
+
+            // Dashed walkway line on the floor leading from the visitor to the desk
+            for (let z = 1.35; z < ROOM.front - 0.6; z += 0.36) {
+                const dash = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.003, 0.2), accentMats[0]);
+                dash.position.set(1.15, 0.005, z);
+                scene.add(dash);
+            }
         }
 
         function createProjectFrameTexture(proj, index) {
