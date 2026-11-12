@@ -1685,11 +1685,12 @@
             const macWhiteMat = new THREE.MeshStandardMaterial({ color: '#F5F5F3', roughness: 0.35, metalness: 0.0 });
             const macBlackMat = new THREE.MeshStandardMaterial({ color: '#0E0E10', roughness: 0.3 });
             const armX = deskX - 0.06;                     // horizontal centre of the main display
-            const bezelW = 1.24;
-            const bezelH = 0.70;
-            const monY = deskH + 0.53;                     // screen centre
+            const bezelW = 0.94;
+            const bezelH = 0.53;
+            const CHIN = 0.10;
+            const LIFT = 0.15;                             // gap between desk and the bottom of the chin (stand visible)
+            const monY = deskH + LIFT + CHIN + 0.02 + bezelH / 2;   // screen centre
             const monZ = deskZ - 0.14;
-            const CHIN = 0.13;
 
             // Body: thin silver slab with the coloured "chin" below the screen
             const imacBody = new THREE.Mesh(new THREE.BoxGeometry(bezelW + 0.04, bezelH + 0.04 + CHIN, 0.022), macSilverMat);
@@ -1704,14 +1705,24 @@
             imacBlackEdge.position.set(armX, monY + 0.01, monZ + 0.012);
             deskGroup.add(imacBlackEdge);
             // Aluminium stand: angled plate + flat foot
-            const standPlate = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.42, 0.012), macSilverMat);
-            standPlate.position.set(armX, deskH + 0.2, monZ - 0.09);
-            standPlate.rotation.x = -0.32;
-            standPlate.castShadow = true;
-            deskGroup.add(standPlate);
-            const standFoot = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.008, 0.2), macSilverMat);
-            standFoot.position.set(armX, deskH + 0.004, monZ - 0.1);
+            // Stand: one bent aluminium sheet — flat foot on the desk, rising behind the body
+            const standW = 0.22;
+            const standFoot = new THREE.Mesh(new THREE.BoxGeometry(standW, 0.008, 0.19), macSilverMat);
+            standFoot.position.set(armX, deskH + 0.004, monZ - 0.04);
+            standFoot.castShadow = true; standFoot.receiveShadow = true;
             deskGroup.add(standFoot);
+            const neckBottom = new THREE.Vector3(armX, deskH + 0.008, monZ - 0.13);
+            const neckTop = new THREE.Vector3(armX, deskH + LIFT + 0.2, monZ - 0.02);
+            const neckLen = neckBottom.distanceTo(neckTop);
+            const standNeck = new THREE.Mesh(new THREE.BoxGeometry(standW, neckLen, 0.01), macSilverMat);
+            standNeck.position.copy(neckBottom).add(neckTop).multiplyScalar(0.5);
+            standNeck.rotation.x = Math.atan2(neckTop.z - neckBottom.z, neckTop.y - neckBottom.y);
+            standNeck.castShadow = true;
+            deskGroup.add(standNeck);
+            const standBend = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, standW, 12), macSilverMat);
+            standBend.rotation.z = Math.PI / 2;
+            standBend.position.copy(neckBottom);
+            deskGroup.add(standBend);
 
             monitorCanvas = document.createElement('canvas');
             monitorCanvas.width = 1024;
@@ -2105,17 +2116,24 @@
                 capsule(0.036, 0.08, M.skin, shoulder).position.set(0, -0.11, 0);
                 const elbow = new THREE.Group(); elbow.position.set(0, -0.16, 0); shoulder.add(elbow);
                 capsule(0.034, 0.09, M.skin, elbow).position.set(0, -0.06, 0);
-                const hand = new THREE.Group(); hand.position.set(0, -0.13, 0); elbow.add(hand);
-                blob(0.036, 1.05, 1.15, 0.6, M.skin, 0, -0.03, 0, hand, 16);                 // palm
-                [-0.021, -0.007, 0.007, 0.021].forEach((fx, i) => {                           // four fingers
-                    const len = [0.026, 0.032, 0.03, 0.024][i];
-                    const f = new THREE.Mesh(createCapsuleGeo(0.0075, len), M.skin);
-                    f.position.set(fx, -0.068 - len * 0.35, 0.004); f.rotation.x = 0.25;
-                    hand.add(f);
+                const hand = new THREE.Group(); hand.position.set(0, -0.125, 0); hand.scale.setScalar(1.25); elbow.add(hand);
+                blob(0.034, 1.0, 1.05, 0.62, M.skin, 0, -0.03, 0, hand, 20);                  // palm
+                blob(0.028, 1.15, 0.6, 0.7, M.skin, 0, -0.055, 0.002, hand, 16);              // knuckle pad
+                [-0.019, -0.0065, 0.0065, 0.019].forEach((fx, i) => {                         // four soft, slightly curled fingers
+                    const len = [0.017, 0.021, 0.02, 0.015][i];
+                    const base = new THREE.Group();
+                    base.position.set(fx, -0.06, 0.003); base.rotation.x = 0.35; base.rotation.z = fx * 1.5;
+                    hand.add(base);
+                    const seg1 = blob(0.0085, 1, 1, 1, M.skin, 0, -len * 0.5, 0, base, 10); seg1.scale.set(1, len / 0.0085 * 0.62, 0.92);
+                    const knuckle = new THREE.Group(); knuckle.position.set(0, -len, 0); knuckle.rotation.x = 0.45; base.add(knuckle);
+                    const seg2 = blob(0.0078, 1, 1, 1, M.skin, 0, -len * 0.42, 0, knuckle, 10); seg2.scale.set(1, len / 0.0078 * 0.5, 0.9);
                 });
-                const thumb = new THREE.Mesh(createCapsuleGeo(0.0085, 0.022), M.skin);       // thumb
-                thumb.position.set(-side * 0.033, -0.035, 0.012); thumb.rotation.set(0.4, 0, -side * 0.7);
-                hand.add(thumb);
+                const thumbBase = new THREE.Group();                                           // two-joint thumb
+                thumbBase.position.set(-side * 0.028, -0.03, 0.012); thumbBase.rotation.set(0.5, 0, -side * 0.85);
+                hand.add(thumbBase);
+                const t1 = blob(0.0105, 1, 1.5, 0.9, M.skin, 0, -0.012, 0, thumbBase, 10);
+                const tJoint = new THREE.Group(); tJoint.position.set(0, -0.024, 0); tJoint.rotation.x = 0.35; thumbBase.add(tJoint);
+                blob(0.0092, 1, 1.35, 0.9, M.skin, 0, -0.01, 0, tJoint, 10);
                 return { shoulder, elbow, hand };
             };
             const armL = buildArm(1, torsoBone);
