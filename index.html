@@ -1117,7 +1117,49 @@
             const sideLen = ROOM.front - ROOM.back, sideCZ = (ROOM.front + ROOM.back) / 2;
 
             const floorGeo = new THREE.PlaneGeometry(roomW + 0.3, sideLen + 0.3);
-            const floorMat = new THREE.MeshStandardMaterial({ color: '#EAE6DF', roughness: 0.85, metalness: 0.02 });
+            // Oak plank floor drawn on a canvas: varied plank lengths, staggered joints, seams and grain
+            const makePlankTexture = () => {
+                const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 1024;
+                const g = cv.getContext('2d');
+                const rows = 8, rowH = cv.height / rows;
+                let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+                const tones = ['#D8C3A0', '#D2BB95', '#DDC9A8', '#CDB48C', '#D6BF99', '#E0CDAD'];
+                for (let r = 0; r < rows; r++) {
+                    let x = -rnd() * 300;
+                    while (x < cv.width) {
+                        const len = 260 + rnd() * 320;
+                        g.fillStyle = tones[Math.floor(rnd() * tones.length)];
+                        g.fillRect(x, r * rowH, len, rowH);
+                        // grain
+                        g.strokeStyle = 'rgba(120, 88, 52, 0.10)'; g.lineWidth = 1.2;
+                        for (let k = 0; k < 7; k++) {
+                            const gy = r * rowH + 8 + rnd() * (rowH - 16);
+                            g.beginPath(); g.moveTo(x, gy);
+                            g.bezierCurveTo(x + len * 0.3, gy + (rnd() - 0.5) * 8, x + len * 0.7, gy + (rnd() - 0.5) * 8, x + len, gy + (rnd() - 0.5) * 4);
+                            g.stroke();
+                        }
+                        // occasional knot
+                        if (rnd() < 0.18) {
+                            g.fillStyle = 'rgba(110, 78, 45, 0.18)';
+                            g.beginPath(); g.ellipse(x + len * rnd(), r * rowH + rowH * (0.3 + rnd() * 0.4), 9, 4, 0, 0, Math.PI * 2); g.fill();
+                        }
+                        // end joint
+                        g.fillStyle = 'rgba(90, 65, 40, 0.45)'; g.fillRect(x + len - 2, r * rowH, 2, rowH);
+                        x += len;
+                    }
+                    // long seam between rows
+                    g.fillStyle = 'rgba(90, 65, 40, 0.5)'; g.fillRect(0, r * rowH, cv.width, 2);
+                }
+                const tex = new THREE.CanvasTexture(cv);
+                tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                tex.encoding = THREE.sRGBEncoding;
+                tex.anisotropy = 8;
+                return tex;
+            };
+            const plankTex = makePlankTexture();
+            const TILE_M = 1.5; // one texture tile = 8 planks of ~19 cm
+            plankTex.repeat.set((roomW + 0.3) / TILE_M, (sideLen + 0.3) / TILE_M);
+            const floorMat = new THREE.MeshStandardMaterial({ map: plankTex, roughness: 0.62, metalness: 0.0 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.position.set(roomCX, 0, sideCZ);
@@ -1127,7 +1169,7 @@
             const gridHelper = new THREE.GridHelper(roomW, 16, 0xd6d1c7, 0xe0dcd3);
             gridHelper.scale.z = sideLen / roomW;
             gridHelper.position.set(roomCX, 0.002, sideCZ);
-            scene.add(gridHelper);
+            // gridHelper replaced by the plank floor
 
             const wallMat = new THREE.MeshStandardMaterial({ color: '#F2ECE3', roughness: 0.92 });      // side/front walls: warm off-white
             const backWallMat = new THREE.MeshStandardMaterial({ color: '#E7DED1', roughness: 0.92 });  // back wall: a shade deeper
@@ -1334,7 +1376,7 @@
                 { x: 0.40, y: 1.95 }
             ];
 
-            const frameMat = new THREE.MeshStandardMaterial({ color: '#1A1A1A', roughness: 0.35, metalness: 0.3 });
+            const frameMat = new THREE.MeshStandardMaterial({ color: '#C9A13B', roughness: 0.32, metalness: 0.55, emissive: '#3a2a08', emissiveIntensity: 0.35 }); // gold frames
             const matteMat = new THREE.MeshStandardMaterial({ color: '#FAF9F6', roughness: 0.85 });
 
             projectsData.forEach((proj, idx) => {
