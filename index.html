@@ -2425,26 +2425,48 @@
                 ctx.font = '600 13px "Noto Sans JP", Inter, sans-serif';
                 ctx.fillText(tx('自動集計ダッシュボード // Real-Time Ledger Sync'), rx + 16, ry + 22);
 
+                // Right half follows the same cycle as the code panel on the left
+                const ja = getLang() === 'ja';
+                const TOTAL = 12480;
+                const processed = Math.floor(TOTAL * cycle);
+                const branches = [
+                    ['#1041', 'TOKYO-HQ', 4120], ['#1042', 'OSAKA-02', 3290], ['#1043', 'NAGOYA-01', 2180],
+                    ['#1044', 'FUKUOKA-03', 1890], ['#1045', 'SAPPORO-01', 1000]
+                ];
+                let acc = 0;
+                const rowState = branches.map(([id, name, n]) => {
+                    const start = acc; acc += n;
+                    const done = Math.max(0, Math.min(n, processed - start));
+                    return { id, name, n, done, p: done / n };
+                });
+                const syncedCount = rowState.filter(r => r.p >= 1).length;
+
+                // Overall sync progress (mirrors the left progress bar)
+                ctx.fillStyle = '#E2E8F0';
+                ctx.fillRect(rx + 16, ry + 38, rw - 32, 5);
+                ctx.fillStyle = '#059669';
+                ctx.fillRect(rx + 16, ry + 38, (rw - 32) * cycle, 5);
+
                 const kpis = [
-                    { label: '月間削減工数', val: '45.0 時間', col: '#059669' },
-                    { label: '処理精度', val: '100.0 %', col: '#2563EB' },
-                    { label: '処理速度', val: '3.8 秒', col: '#D97706' }
+                    { label: '月間削減工数', val: (45 * cycle).toFixed(1) + (ja ? ' 時間' : ' hrs'), col: '#059669' },
+                    { label: '処理精度', val: (cycle < 0.05 ? 0 : 97 + 3 * Math.min(1, cycle * 1.15)).toFixed(1) + ' %', col: '#2563EB' },
+                    { label: '処理速度', val: (3.8 * cycle).toFixed(2) + (ja ? ' 秒' : ' s'), col: '#D97706' }
                 ];
                 kpis.forEach((kpi, i) => {
                     const kx = rx + 16 + i * 154;
-                    const ky = ry + 48;
+                    const ky = ry + 50;
                     ctx.fillStyle = '#F8FAFC';
-                    ctx.fillRect(kx, ky, 144, 68);
+                    ctx.fillRect(kx, ky, 144, 66);
                     ctx.strokeStyle = '#E2E8F0';
-                    ctx.strokeRect(kx, ky, 144, 68);
+                    ctx.strokeRect(kx, ky, 144, 66);
 
                     ctx.fillStyle = '#64748B';
                     ctx.font = '11px "Noto Sans JP", sans-serif';
-                    ctx.fillText(tx(kpi.label), kx + 12, ky + 24);
+                    ctx.fillText(tx(kpi.label), kx + 12, ky + 23);
 
                     ctx.fillStyle = kpi.col;
                     ctx.font = '700 18px Inter, sans-serif';
-                    ctx.fillText(tx(kpi.val), kx + 12, ky + 52);
+                    ctx.fillText(kpi.val, kx + 12, ky + 51);
                 });
 
                 ctx.fillStyle = '#1E293B';
@@ -2453,41 +2475,58 @@
                 ctx.font = '600 12px monospace';
                 ctx.fillText('ID       BRANCH        RECORDS     STATUS', rx + 28, ry + 151);
 
-                const tableRows = [
-                    ['#1041', 'TOKYO-HQ', '4,120', 'SYNCED ✓'],
-                    ['#1042', 'OSAKA-02', '3,290', 'SYNCED ✓'],
-                    ['#1043', 'NAGOYA-01', '2,180', 'SYNCED ✓'],
-                    ['#1044', 'FUKUOKA-03', '1,890', 'SYNCED ✓'],
-                    ['#1045', 'SAPPORO-01', '1,000', cycle > 0.5 ? 'SYNCED ✓' : 'VERIFYING...']
-                ];
-
-                tableRows.forEach((r, idx) => {
+                rowState.forEach((r, idx) => {
                     const rowY = ry + 162 + idx * 36;
-                    ctx.fillStyle = idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+                    const active = r.p > 0 && r.p < 1;
+                    ctx.fillStyle = active ? '#FFFBEB' : (idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC');
                     ctx.fillRect(rx + 16, rowY, rw - 32, 36);
-                    ctx.strokeStyle = '#E2E8F0';
+                    ctx.strokeStyle = active ? '#FCD34D' : '#E2E8F0';
                     ctx.strokeRect(rx + 16, rowY, rw - 32, 36);
 
-                    ctx.fillStyle = '#334155';
+                    const recs = (r.p >= 1 ? r.n : r.done).toLocaleString('en-US');
+                    ctx.fillStyle = r.p > 0 ? '#334155' : '#94A3B8';
                     ctx.font = '12px monospace';
-                    ctx.fillText(`${r[0]}    ${r[1].padEnd(11, ' ')}   ${r[2].padEnd(8, ' ')}`, rx + 28, rowY + 23);
+                    ctx.fillText(`${r.id}    ${r.name.padEnd(11, ' ')}   ${recs.padEnd(8, ' ')}`, rx + 28, rowY + 23);
 
-                    ctx.fillStyle = r[3].includes('SYNCED') ? '#059669' : '#D97706';
                     ctx.font = '700 12px monospace';
-                    ctx.fillText(r[3], rx + 345, rowY + 23);
+                    if (r.p >= 1) {
+                        ctx.fillStyle = '#059669';
+                        ctx.fillText('SYNCED ✓', rx + 345, rowY + 23);
+                    } else if (active) {
+                        ctx.fillStyle = '#D97706';
+                        ctx.fillText(`SYNCING ${Math.floor(r.p * 100)}%`, rx + 345, rowY + 18);
+                        ctx.fillStyle = '#FDE68A';
+                        ctx.fillRect(rx + 345, rowY + 24, 100, 4);
+                        ctx.fillStyle = '#D97706';
+                        ctx.fillRect(rx + 345, rowY + 24, 100 * r.p, 4);
+                    } else {
+                        ctx.fillStyle = '#94A3B8';
+                        ctx.fillText('QUEUED', rx + 345, rowY + 23);
+                    }
                 });
 
                 ctx.fillStyle = '#64748B';
                 ctx.font = '11px "Noto Sans JP", sans-serif';
                 ctx.fillText(tx('業務工数比較: 手作業 (グレー) vs 自動化後 (ゴールド)'), rx + 16, ry + 370);
+                ctx.fillStyle = '#059669';
+                ctx.font = '700 11px Inter, sans-serif';
+                ctx.fillText(`${syncedCount} / ${branches.length} ${ja ? '拠点 完了' : 'branches synced'}`, rx + rw - 140, ry + 370);
 
+                // Grey = manual hours per branch; gold = automated time, grows in once that branch is synced
                 [140, 165, 150, 180, 160].forEach((barH, i) => {
                     const bx = rx + 32 + i * 86;
                     const baseLine = ry + 480;
                     ctx.fillStyle = '#CBD5E1';
                     ctx.fillRect(bx, baseLine - barH * 0.55, 26, barH * 0.55);
-                    ctx.fillStyle = '#D97706';
-                    ctx.fillRect(bx + 32, baseLine - 8, 26, 8);
+                    const g = Math.min(1, rowState[i].p);
+                    if (g > 0) {
+                        const gh = 8 * g;
+                        ctx.fillStyle = rowState[i].p >= 1 ? '#D97706' : '#FBBF24';
+                        ctx.fillRect(bx + 32, baseLine - gh, 26, gh);
+                    }
+                    ctx.fillStyle = '#94A3B8';
+                    ctx.font = '10px monospace';
+                    ctx.fillText(branches[i][1].split('-')[0], bx - 2, baseLine + 14);
                 });
 
                 monitorTexture.needsUpdate = true;
