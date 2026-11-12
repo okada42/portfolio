@@ -1746,162 +1746,218 @@
             const swivelGroup = new THREE.Group();
             group.add(swivelGroup);
 
-            // --- Chair (White modern chair) ---
+            // --- Chair (white molded shell on a chrome sled base) ---
             const chairGroup = new THREE.Group();
-            const chairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
-            const darkMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 });
-            
-            const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.5), chairMat);
-            seat.position.set(0, 0.45, 0);
+            const chairMat = new THREE.MeshStandardMaterial({ color: 0xf7f6f3, roughness: 0.45 });
+            const chromeMat = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, roughness: 0.25, metalness: 0.85 });
+
+            const seat = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.05, 0.5), chairMat);
+            seat.position.set(0, 0.45, 0.02);
             chairGroup.add(seat);
-            
-            const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.08), chairMat);
-            backrest.position.set(0, 0.75, -0.22);
+            const seatFront = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.56, 16), chairMat);
+            seatFront.rotation.z = Math.PI / 2;
+            seatFront.position.set(0, 0.44, 0.27);
+            chairGroup.add(seatFront);
+
+            const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.52, 0.04), chairMat);
+            backrest.position.set(0, 0.74, -0.24);
+            backrest.rotation.x = -0.14;
             chairGroup.add(backrest);
-            
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), darkMat);
-            pole.position.y = 0.2;
-            chairGroup.add(pole);
-            
-            for(let i = 0; i < 4; i++) {
-                const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.5), darkMat);
-                leg.position.y = 0.02;
-                leg.rotation.y = (Math.PI / 4) * i;
-                chairGroup.add(leg);
-            }
+            const backTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.54, 16), chairMat);
+            backTop.rotation.z = Math.PI / 2;
+            backTop.position.set(0, 1.0, -0.28);
+            chairGroup.add(backTop);
+
+            // Sled base: two chrome loops (floor rail + upright + seat rail)
+            const rod = (a, b) => {
+                const dir = new THREE.Vector3().subVectors(b, a);
+                const m = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, dir.length(), 10), chromeMat);
+                m.position.copy(a).add(b).multiplyScalar(0.5);
+                m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+                chairGroup.add(m);
+            };
+            [-0.24, 0.24].forEach(x => {
+                const f1 = new THREE.Vector3(x, 0.015, 0.3), f2 = new THREE.Vector3(x, 0.015, -0.22);
+                const s1 = new THREE.Vector3(x, 0.42, -0.18), s2 = new THREE.Vector3(x, 0.42, 0.2);
+                rod(f1, f2); rod(f2, s1); rod(s1, s2);
+            });
+            rod(new THREE.Vector3(-0.24, 0.015, 0.3), new THREE.Vector3(0.24, 0.015, 0.3));
             swivelGroup.add(chairGroup);
 
-            // --- Character (Claymorphism style) ---
+            // --- Character (chibi claymorphism, matches reference) ---
             const charGroup = new THREE.Group();
-            charGroup.position.y = 0.49; // Sit on the chair seat
-            
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcdb2, roughness: 0.8, metalness: 0.1 });
-            const hairMat = new THREE.MeshStandardMaterial({ color: 0x4a3018, roughness: 0.9, metalness: 0.1 });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-            const shoeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.7 });
-            const shoeBlackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
-            
-            // TorsoPivot (Black t-shirt)
-            const torsoPivot = new THREE.Group();
-            torsoPivot.position.y = 0.25;
-            charGroup.add(torsoPivot);
+            charGroup.position.y = 0.49;
 
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.45, 32), shirtMat);
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xf6c9a6, roughness: 0.75 });
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.8 });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.85 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.9 });
+            const shoeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.6 });
+            const shoeBlackMat = new THREE.MeshStandardMaterial({ color: 0x1e1e1e, roughness: 0.7 });
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2b1a12 });
+            const shineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const blushMat = new THREE.MeshBasicMaterial({ color: 0xf2a08f, transparent: true, opacity: 0.55 });
+
+            // Torso: rounded black tee
+            const torsoPivot = new THREE.Group();
+            torsoPivot.position.y = 0.2;
+            charGroup.add(torsoPivot);
+            const torso = new THREE.Mesh(createCapsuleGeo(0.16, 0.16), shirtMat);
+            torso.scale.set(1.12, 1, 0.85);
             torsoPivot.add(torso);
-            
-            // HeadPivot (Big round spherical head)
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.08, 16), skinMat);
+            neck.position.y = 0.25;
+            torsoPivot.add(neck);
+
+            // Head: big, slightly wide
             const headPivot = new THREE.Group();
-            headPivot.position.set(0, 0.4, 0);
+            headPivot.position.set(0, 0.47, 0);
             torsoPivot.add(headPivot);
-            
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), skinMat);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 40, 32), skinMat);
+            head.scale.set(1.08, 0.98, 1);
             headPivot.add(head);
-            
-            // Hair (Base cap + swooping bangs)
-            const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.29, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2.2), hairMat);
-            hairBase.position.y = 0.02;
-            headPivot.add(hairBase);
-            
-            const bangs = new THREE.Mesh(createCapsuleGeo(0.09, 0.25), hairMat);
-            bangs.rotation.z = Math.PI / 2;
-            bangs.rotation.x = Math.PI / 6;
-            bangs.position.set(0.08, 0.18, 0.23);
-            headPivot.add(bangs);
-            
-            // Eyes (Simple black dots)
-            const eyeGeo = new THREE.SphereGeometry(0.022, 16, 16);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(-0.1, 0.03, 0.26);
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(0.1, 0.03, 0.26);
-            headPivot.add(leftEye, rightEye);
-            
-            // Smile
-            const smileGeo = new THREE.TorusGeometry(0.06, 0.012, 16, 32, Math.PI * 0.8);
-            const smileTeeth = new THREE.Mesh(smileGeo, eyeMat);
+            [-1, 1].forEach(s => {
+                const ear = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 12), skinMat);
+                ear.scale.set(0.55, 1, 0.8);
+                ear.position.set(s * 0.29, -0.01, 0);
+                headPivot.add(ear);
+            });
+
+            // Hair: cap + volume + side-swept fringe
+            const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.29, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.52), hairMat);
+            hairCap.scale.set(1.1, 1.05, 1.06);
+            hairCap.position.set(0, 0.03, -0.01);
+            headPivot.add(hairCap);
+            const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 24), hairMat);
+            hairBack.scale.set(1.08, 0.85, 0.9);
+            hairBack.position.set(0, 0.02, -0.07);
+            headPivot.add(hairBack);
+            const fringe = new THREE.Mesh(createCapsuleGeo(0.085, 0.3), hairMat);
+            fringe.rotation.set(0.35, 0, Math.PI / 2 - 0.25);
+            fringe.position.set(0.04, 0.17, 0.2);
+            headPivot.add(fringe);
+            const swoop = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 16), hairMat);
+            swoop.scale.set(1.3, 0.7, 0.9);
+            swoop.position.set(0.15, 0.2, 0.17);
+            headPivot.add(swoop);
+            const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), hairMat);
+            tuft.scale.set(1.2, 0.6, 1);
+            tuft.position.set(-0.17, 0.17, 0.15);
+            headPivot.add(tuft);
+
+            // Face: brows, eyes with shine, blush, nose, smile
+            [-1, 1].forEach(s => {
+                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 16), eyeMat);
+                eye.scale.set(1, 1.15, 0.5);
+                eye.position.set(s * 0.1, 0.0, 0.255);
+                headPivot.add(eye);
+                const shine = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 8), shineMat);
+                shine.position.set(s * 0.1 + 0.01, 0.014, 0.27);
+                headPivot.add(shine);
+                const brow = new THREE.Mesh(createCapsuleGeo(0.009, 0.05), hairMat);
+                brow.rotation.z = Math.PI / 2 + s * 0.12;
+                brow.position.set(s * 0.1, 0.07, 0.25);
+                headPivot.add(brow);
+                const blush = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), blushMat);
+                blush.position.set(s * 0.165, -0.05, 0.225);
+                blush.rotation.y = s * 0.55;
+                headPivot.add(blush);
+            });
+            const nose = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 12), skinMat);
+            nose.position.set(0, -0.035, 0.27);
+            headPivot.add(nose);
+            const restMouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 8, 20, Math.PI * 0.7), eyeMat);
+            restMouth.rotation.z = Math.PI + Math.PI * 0.15;
+            restMouth.position.set(0, -0.075, 0.262);
+            headPivot.add(restMouth);
+            // Big grin that grows during greeting (animated via characterRig.smileTeeth)
+            const smileTeeth = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.011, 12, 28, Math.PI * 0.8), eyeMat);
             smileTeeth.rotation.x = Math.PI;
             smileTeeth.rotation.z = -Math.PI * 0.4;
-            smileTeeth.position.set(0, -0.05, 0.27);
+            smileTeeth.position.set(0, -0.06, 0.262);
             headPivot.add(smileTeeth);
-            
-            // Left Arm 
+
+            // Arm builder: short black sleeve + skin forearm + hand
+            const buildArm = (parent, side) => {
+                const sleeve = new THREE.Mesh(createCapsuleGeo(0.062, 0.06), shirtMat);
+                sleeve.position.y = -0.05;
+                parent.add(sleeve);
+                const upper = new THREE.Mesh(createCapsuleGeo(0.045, 0.1), skinMat);
+                upper.position.y = -0.11;
+                parent.add(upper);
+            };
+
+            // Left arm reaches forward to the desk (pose held in an inner group so animation can add sway)
             const leftShoulderPivot = new THREE.Group();
-            leftShoulderPivot.position.set(0.25, 0.1, 0);
-            leftShoulderPivot.rotation.x = 0.6;
+            leftShoulderPivot.position.set(0.21, 0.13, 0);
             torsoPivot.add(leftShoulderPivot);
+            const leftPose = new THREE.Group();
+            leftPose.rotation.set(-1.15, 0, 0.12);
+            leftShoulderPivot.add(leftPose);
+            buildArm(leftPose, 1);
+            const leftFore = new THREE.Mesh(createCapsuleGeo(0.042, 0.13), skinMat);
+            leftFore.position.y = -0.24;
+            leftPose.add(leftFore);
+            const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), skinMat);
+            leftHand.position.y = -0.33;
+            leftPose.add(leftHand);
 
-            const leftArm = new THREE.Mesh(createCapsuleGeo(0.06, 0.28), skinMat);
-            leftArm.position.y = -0.15;
-            leftShoulderPivot.add(leftArm);
-            
-            // Right Arm (Waving Arm Rig compatible with characterRig)
+            // Right arm (waving rig used by characterRig)
             const rightShoulderPivot = new THREE.Group();
-            rightShoulderPivot.position.set(-0.25, 0.1, 0);
+            rightShoulderPivot.position.set(-0.21, 0.13, 0);
             torsoPivot.add(rightShoulderPivot);
-
+            buildArm(rightShoulderPivot, -1);
             const rightElbowPivot = new THREE.Group();
-            rightElbowPivot.position.y = -0.15;
+            rightElbowPivot.position.y = -0.17;
             rightShoulderPivot.add(rightElbowPivot);
-
-            const rightWristPivot = new THREE.Group();
-            rightWristPivot.position.y = -0.15;
-            rightElbowPivot.add(rightWristPivot);
-
-            // Right Arm Meshes
-            const rightUpperArm = new THREE.Mesh(createCapsuleGeo(0.055, 0.15), skinMat);
-            rightUpperArm.position.y = -0.075;
-            rightShoulderPivot.add(rightUpperArm);
-
-            const rightLowerArm = new THREE.Mesh(createCapsuleGeo(0.05, 0.15), skinMat);
-            rightLowerArm.position.y = -0.075;
+            const rightLowerArm = new THREE.Mesh(createCapsuleGeo(0.042, 0.09), skinMat);
+            rightLowerArm.position.y = -0.06;
             rightElbowPivot.add(rightLowerArm);
-
-            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.065), skinMat);
+            const rightWristPivot = new THREE.Group();
+            rightWristPivot.position.y = -0.13;
+            rightElbowPivot.add(rightWristPivot);
+            const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.052, 16, 12), skinMat);
             rightHand.position.y = -0.02;
             rightWristPivot.add(rightHand);
-            
-            // Pre-pose right arm slightly so it rests
-            rightShoulderPivot.rotation.x = 0.5;
 
-            // Legs (Tubular pants)
-            const leftThigh = new THREE.Mesh(createCapsuleGeo(0.09, 0.22), pantsMat);
-            leftThigh.rotation.x = Math.PI / 2;
-            leftThigh.position.set(0.12, 0.05, 0.15);
-            charGroup.add(leftThigh);
-            
-            const leftCalf = new THREE.Mesh(createCapsuleGeo(0.08, 0.25), pantsMat);
-            leftCalf.position.set(0.12, -0.1, 0.25);
-            charGroup.add(leftCalf);
-            
-            const rightThigh = new THREE.Mesh(createCapsuleGeo(0.09, 0.22), pantsMat);
-            rightThigh.rotation.x = Math.PI / 2;
-            rightThigh.position.set(-0.12, 0.05, 0.15);
-            charGroup.add(rightThigh);
-            
-            const rightCalf = new THREE.Mesh(createCapsuleGeo(0.08, 0.25), pantsMat);
-            rightCalf.position.set(-0.12, -0.1, 0.25);
-            charGroup.add(rightCalf);
-            
-            // Shoes (Black and white sneakers)
+            // Legs: chunky dark pants, knees forward, shins down
+            [-1, 1].forEach(s => {
+                const thigh = new THREE.Mesh(createCapsuleGeo(0.085, 0.2), pantsMat);
+                thigh.rotation.x = Math.PI / 2;
+                thigh.position.set(s * 0.1, 0.03, 0.14);
+                charGroup.add(thigh);
+                const shin = new THREE.Mesh(createCapsuleGeo(0.075, 0.24), pantsMat);
+                shin.rotation.x = -0.12;
+                shin.position.set(s * 0.11, -0.13, 0.28);
+                charGroup.add(shin);
+            });
+
+            // Sneakers: black upper, white sole + toe cap + stripe
             const createShoe = () => {
-                const shoeGroup = new THREE.Group();
-                const sole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 0.22), shoeWhiteMat);
-                sole.position.y = -0.02;
-                shoeGroup.add(sole);
-                const upper = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.2), shoeBlackMat);
-                upper.position.y = 0.04;
-                shoeGroup.add(upper);
-                return shoeGroup;
+                const g = new THREE.Group();
+                const sole = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.035, 0.22), shoeWhiteMat);
+                sole.position.set(0, -0.02, 0.02);
+                g.add(sole);
+                const upper = new THREE.Mesh(createCapsuleGeo(0.055, 0.1), shoeBlackMat);
+                upper.rotation.x = Math.PI / 2;
+                upper.scale.set(1, 1, 0.9);
+                upper.position.set(0, 0.035, 0.0);
+                g.add(upper);
+                const toe = new THREE.Mesh(new THREE.SphereGeometry(0.058, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), shoeWhiteMat);
+                toe.rotation.x = Math.PI / 2;
+                toe.scale.set(1, 1, 0.7);
+                toe.position.set(0, 0.02, 0.09);
+                g.add(toe);
+                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.122, 0.015, 0.07), shoeWhiteMat);
+                stripe.position.set(0, 0.04, -0.01);
+                g.add(stripe);
+                return g;
             };
-            
             const leftShoe = createShoe();
-            leftShoe.position.set(0.12, -0.25, 0.3);
+            leftShoe.position.set(0.11, -0.27, 0.32);
             charGroup.add(leftShoe);
-            
             const rightShoe = createShoe();
-            rightShoe.position.set(-0.12, -0.25, 0.3);
+            rightShoe.position.set(-0.11, -0.27, 0.32);
             charGroup.add(rightShoe);
 
             swivelGroup.add(charGroup);
