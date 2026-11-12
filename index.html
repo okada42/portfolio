@@ -6,6 +6,7 @@
     <title>Studio Portfolio | Senior Engineer & UI/UX Designer (15+ Years)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="assets/i18n.js"></script>
     <!-- Three.js & OrbitControls via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -113,6 +114,10 @@
             </nav>
 
             <div class="flex items-center space-x-2">
+                <div class="flex items-center bg-studioWarm/80 p-0.5 rounded-lg border border-subtleBorder text-[11px] font-medium" role="group" aria-label="Language / 言語">
+                    <button data-lang-btn="en" onclick="setLanguage('en')" class="px-2 py-1 rounded-md text-inkGray transition-colors">EN</button>
+                    <button data-lang-btn="ja" onclick="setLanguage('ja')" class="px-2 py-1 rounded-md text-inkGray transition-colors">日本語</button>
+                </div>
                 <button onclick="switchTab('contact')" class="px-3 sm:px-4 py-2 rounded-lg bg-matteBlack hover:bg-oakWood text-white text-xs font-medium tracking-wide transition-colors whitespace-nowrap">
                     ▶ ご相談<span class="hidden sm:inline">・お見積り</span>
                 </button>
@@ -897,6 +902,7 @@
         let hoveredObject = null;
         let selectedObject = null;
         let currentScenarioIdx = 0;
+        let demoRunning = false;
         let demoTimeouts = [];
 
         // Balanced architectural camera framing centered on desk + overhead bookshelf + symmetric left/right galleries
@@ -1035,7 +1041,8 @@
         let characterRig = null;
         // Day / night lighting state (0 = day, 1 = night), eased each frame
         const studioLights = { spots: [] };
-        const deskProps = {};   // mouse / keyboard references for the working animation
+        const deskProps = {};
+        const localizedTextures = [];   // callbacks that redraw canvas textures when the language changes   // mouse / keyboard references for the working animation
         let nightTarget = 0, nightBlend = 0;
         const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
@@ -1347,6 +1354,7 @@
         }
 
         function createProjectFrameTexture(proj, index) {
+            proj = L10N(proj);
             const canvas = document.createElement('canvas');
             canvas.width = 512;
             canvas.height = 352;
@@ -1368,7 +1376,7 @@
 
             ctx.fillStyle = '#FDE68A';
             ctx.font = '600 15px monospace';
-            ctx.fillText(`ARCHIVE 0${index + 1}`, 42, 58);
+            ctx.fillText(getLang() === 'ja' ? `作品 0${index + 1}` : `ARCHIVE 0${index + 1}`, 42, 58);
 
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '700 21px "Noto Sans JP", Inter, sans-serif';
@@ -1515,6 +1523,7 @@
                     new THREE.PlaneGeometry(0.80, 0.54),
                     new THREE.MeshStandardMaterial({ map: artTex, roughness: 0.4 })
                 );
+                localizedTextures.push(() => { const m = artMesh.material; if (m.map) m.map.dispose(); m.map = createProjectFrameTexture(proj, idx); m.needsUpdate = true; });
                 artMesh.position.z = 0.0325;
 
                 artMesh.userData = {
@@ -1531,6 +1540,7 @@
         }
 
         function createBookSpineTexture(book) {
+            book = L10N(book);
             const canvas = document.createElement('canvas');
             canvas.width = 128;
             canvas.height = 512;
@@ -1595,6 +1605,7 @@
 
                 const spineTex = createBookSpineTexture(book);
                 const spineMat = new THREE.MeshStandardMaterial({ map: spineTex, roughness: 0.5 });
+                localizedTextures.push(() => { if (spineMat.map) spineMat.map.dispose(); spineMat.map = createBookSpineTexture(book); spineMat.needsUpdate = true; });
                 const coverMat = new THREE.MeshStandardMaterial({ color: book.spineColor, roughness: 0.6 });
 
                 const materials = [coverMat, coverMat, pageMat, pageMat, spineMat, pageMat];
@@ -2067,22 +2078,25 @@
             canvas.height = 96;
             const ctx = canvas.getContext('2d');
 
-            ctx.fillStyle = '#1A1A1A';
-            ctx.beginPath();
-            ctx.roundRect(8, 8, 240, 80, 20);
-            ctx.fill();
-
-            ctx.strokeStyle = '#D97706';
-            ctx.lineWidth = 4;
-            ctx.stroke();
-
-            ctx.fillStyle = '#FDE68A';
-            ctx.font = '700 32px Inter, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('WELCOME!', 128, 50);
+            const draw = () => {
+                ctx.clearRect(0, 0, 256, 96);
+                ctx.fillStyle = '#1A1A1A';
+                ctx.beginPath();
+                ctx.roundRect(8, 8, 240, 80, 20);
+                ctx.fill();
+                ctx.strokeStyle = '#D97706';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                ctx.fillStyle = '#FDE68A';
+                ctx.font = '700 32px Inter, "Noto Sans JP", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(tx('WELCOME!'), 128, 50);
+            };
+            draw();
 
             const tex = new THREE.CanvasTexture(canvas);
+            localizedTextures.push(() => { draw(); tex.needsUpdate = true; });
             const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0 });
             const sprite = new THREE.Sprite(mat);
             sprite.scale.set(0.46, 0.17, 1);
@@ -2403,7 +2417,7 @@
                 ctx.fillRect(lx + 20, ly + 432, lw - 40, 46);
                 ctx.fillStyle = '#FDE68A';
                 ctx.font = '600 14px "Noto Sans JP", sans-serif';
-                ctx.fillText('▶ モニターをクリックして実演デモを起動', lx + 36, ly + 460);
+                ctx.fillText(tx('▶ モニターをクリックして実演デモを起動'), lx + 36, ly + 460);
 
                 const rx = 524, ry = 42, rw = 482, rh = 500;
                 ctx.fillStyle = '#FFFFFF';
@@ -2413,7 +2427,7 @@
                 ctx.fillRect(rx, ry, rw, 34);
                 ctx.fillStyle = '#18181B';
                 ctx.font = '600 13px "Noto Sans JP", Inter, sans-serif';
-                ctx.fillText('自動集計ダッシュボード // Real-Time Ledger Sync', rx + 16, ry + 22);
+                ctx.fillText(tx('自動集計ダッシュボード // Real-Time Ledger Sync'), rx + 16, ry + 22);
 
                 const kpis = [
                     { label: '月間削減工数', val: '45.0 時間', col: '#059669' },
@@ -2430,11 +2444,11 @@
 
                     ctx.fillStyle = '#64748B';
                     ctx.font = '11px "Noto Sans JP", sans-serif';
-                    ctx.fillText(kpi.label, kx + 12, ky + 24);
+                    ctx.fillText(tx(kpi.label), kx + 12, ky + 24);
 
                     ctx.fillStyle = kpi.col;
                     ctx.font = '700 18px Inter, sans-serif';
-                    ctx.fillText(kpi.val, kx + 12, ky + 52);
+                    ctx.fillText(tx(kpi.val), kx + 12, ky + 52);
                 });
 
                 ctx.fillStyle = '#1E293B';
@@ -2469,7 +2483,7 @@
 
                 ctx.fillStyle = '#64748B';
                 ctx.font = '11px "Noto Sans JP", sans-serif';
-                ctx.fillText('業務工数比較: 手作業 (グレー) vs 自動化後 (ゴールド)', rx + 16, ry + 370);
+                ctx.fillText(tx('業務工数比較: 手作業 (グレー) vs 自動化後 (ゴールド)'), rx + 16, ry + 370);
 
                 [140, 165, 150, 180, 160].forEach((barH, i) => {
                     const bx = rx + 32 + i * 86;
@@ -2570,17 +2584,17 @@
                     }
 
                     if (hit.userData.type === 'project') {
-                        tooltipCat.textContent = hit.userData.data.tag;
-                        tooltipTitle.textContent = hit.userData.data.title;
+                        tooltipCat.textContent = tx(hit.userData.data.tag);
+                        tooltipTitle.textContent = tx(hit.userData.data.title);
                     } else if (hit.userData.type === 'book') {
-                        tooltipCat.textContent = hit.userData.data.tag;
-                        tooltipTitle.textContent = hit.userData.data.title;
+                        tooltipCat.textContent = tx(hit.userData.data.tag);
+                        tooltipTitle.textContent = tx(hit.userData.data.title);
                     } else if (hit.userData.type === 'character') {
-                        tooltipCat.textContent = '[ STUDIO ENGINEER // 15+ YEARS ]';
-                        tooltipTitle.textContent = hit.userData.data.title;
+                        tooltipCat.textContent = tx('[ STUDIO ENGINEER // 15+ YEARS ]');
+                        tooltipTitle.textContent = tx(hit.userData.data.title);
                     } else {
-                        tooltipCat.textContent = '[ WORKSTATION MONITOR ]';
-                        tooltipTitle.textContent = hit.userData.data.title;
+                        tooltipCat.textContent = tx('[ WORKSTATION MONITOR ]');
+                        tooltipTitle.textContent = tx(hit.userData.data.title);
                     }
                 }
             } else {
@@ -2693,10 +2707,22 @@
             const btn = document.getElementById('daynight-btn');
             if (btn) {
                 btn.setAttribute('aria-pressed', night ? 'true' : 'false');
-                btn.innerHTML = night ? '☾<span class="hidden sm:inline"> Night</span>' : '☀<span class="hidden sm:inline"> Day</span>';
+                btn.innerHTML = night ? `☾<span class="hidden sm:inline"> ${tx('Night')}</span>` : `☀<span class="hidden sm:inline"> ${tx('Day')}</span>`;
             }
         }
         function toggleDayNight() { setNightMode(nightTarget < 0.5); }
+
+        // Re-render everything that is drawn from JS when the visitor switches EN / 日本語
+        window.onLanguageChanged = function () {
+            localizedTextures.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
+            const btn = document.getElementById('daynight-btn');
+            if (btn) btn.innerHTML = nightTarget > 0.5 ? `☾<span class="hidden sm:inline"> ${tx('Night')}</span>` : `☀<span class="hidden sm:inline"> ${tx('Day')}</span>`;
+            const backdrop = document.getElementById('detail-drawer-backdrop');
+            if (lastDrawerItem && backdrop && !backdrop.classList.contains('hidden')) openDetailDrawer(null, lastDrawerItem);
+            const modal = document.getElementById('directory-modal');
+            if (modal && !modal.classList.contains('hidden')) openDirectoryModal();
+            if (!demoRunning) selectAutomationScenario(currentScenarioIdx);
+        };
 
         function animateThreeStudio() {
             requestAnimationFrame(animateThreeStudio);
@@ -2932,6 +2958,7 @@
             }
         }
 
+        let lastDrawerItem = null;
         function openDetailDrawer(type, item) {
             const backdrop = document.getElementById('detail-drawer-backdrop');
             const tagEl = document.getElementById('drawer-tag');
@@ -2942,6 +2969,8 @@
             const bulletsEl = document.getElementById('drawer-bullets');
 
             if (!backdrop) return;
+            lastDrawerItem = item;
+            item = L10N(item);
 
             tagEl.textContent = item.tag;
             titleEl.textContent = item.title;
@@ -2985,14 +3014,14 @@
             const projList = document.getElementById('index-projects-list');
             const bookList = document.getElementById('index-books-list');
 
-            projList.innerHTML = projectsData.map((p, i) => `
+            projList.innerHTML = projectsData.map(L10N).map((p, i) => `
                 <button onclick="closeDirectoryModal(); openDetailDrawer('project', projectsData[${i}])" class="w-full text-left p-3 rounded-xl bg-white hover:bg-studioWarm border border-subtleBorder transition-colors">
                     <div class="text-[10px] font-mono text-oakWood">${p.tag}</div>
                     <div class="text-xs font-medium text-matteBlack mt-0.5">${p.title}</div>
                 </button>
             `).join('');
 
-            bookList.innerHTML = BOOKS_DATA.map((b, i) => `
+            bookList.innerHTML = BOOKS_DATA.map(L10N).map((b, i) => `
                 <button onclick="closeDirectoryModal(); openDetailDrawer('book', BOOKS_DATA[${i}])" class="w-full text-left p-3 rounded-xl bg-white hover:bg-studioWarm border border-subtleBorder transition-colors">
                     <div class="text-[10px] font-mono text-oakWood">${b.tag}</div>
                     <div class="text-xs font-medium text-matteBlack mt-0.5">${b.title}</div>
@@ -3009,7 +3038,7 @@
 
         function selectAutomationScenario(idx) {
             currentScenarioIdx = idx;
-            const scen = AUTOMATION_SCENARIOS[idx];
+            const scen = L10N(AUTOMATION_SCENARIOS[idx]);
 
             [0, 1, 2].forEach(i => {
                 const btn = document.getElementById(`scen-btn-${i}`);
@@ -3046,7 +3075,7 @@
                 if (node) node.className = 'p-3 rounded-lg border border-subtleBorder bg-studioWall transition-all';
                 if (stat) {
                     stat.className = 'text-[11px] text-inkGray mt-1';
-                    stat.textContent = '待機中';
+                    stat.textContent = tx('待機中');
                 }
             });
 
@@ -3054,14 +3083,15 @@
             if (term) {
                 term.innerHTML = `
                     <div class="text-stone-400">$ python3 automate_pipeline.py --case=0${currentScenarioIdx + 1}</div>
-                    <div class="text-stone-400">[SYSTEM] Ready. 「▶ 自動化プロセスを実行する」ボタンを押して動作を確認してください。</div>
+                    <div class="text-stone-400">${tx('[SYSTEM] Ready. 「▶ 自動化プロセスを実行する」ボタンを押して動作を確認してください。')}</div>
                 `;
             }
         }
 
         function startScreeningDemo() {
             resetPipelineUI();
-            const scen = AUTOMATION_SCENARIOS[currentScenarioIdx];
+            demoRunning = true;
+            const scen = L10N(AUTOMATION_SCENARIOS[currentScenarioIdx]);
             const term = document.getElementById('automation-terminal');
 
             term.innerHTML = `<div class="text-amber-300">$ python3 automate_pipeline.py --case=0${currentScenarioIdx + 1} --execute</div>`;
@@ -3083,12 +3113,13 @@
                                 document.getElementById(`pipe-node-${n}`).className = 'p-3 rounded-lg border border-emerald-500 bg-emerald-50/60 transition-all';
                                 const sEl = document.getElementById(`pipe-stat-${n}`);
                                 sEl.className = 'text-[11px] text-emerald-700 font-semibold mt-1';
-                                sEl.textContent = '完了 ✓';
+                                sEl.textContent = tx('完了 ✓');
+                                demoRunning = false;
                             });
                         } else {
                             node.className = 'p-3 rounded-lg border border-oakWood bg-amber-50/60 transition-all';
                             stat.className = 'text-[11px] text-oakWood font-medium mt-1';
-                            stat.textContent = '処理実行中...';
+                            stat.textContent = tx('処理実行中...');
                         }
                     }
                 }, log.delay);
@@ -3234,9 +3265,9 @@
             const container = document.getElementById('canvas-container');
             if (!container) return;
             container.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font:14px/1.7 Inter,sans-serif;color:#555">'
-                + '<div><div style="font-weight:600;color:#1A1A1A;margin-bottom:6px">3D studio could not start</div>'
+                + '<div><div style="font-weight:600;color:#1A1A1A;margin-bottom:6px">' + tx('3D studio could not start') + '</div>'
                 + '<div>' + reason + '</div>'
-                + '<div style="margin-top:8px;font-size:12px;color:#888">Try enabling hardware acceleration in your browser settings, or open this page in another browser.</div></div></div>';
+                + '<div style="margin-top:8px;font-size:12px;color:#888">' + tx('Try enabling hardware acceleration in your browser settings, or open this page in another browser.') + '</div></div></div>';
         }
 
         function webglAvailable() {
@@ -3249,9 +3280,9 @@
         window.onload = function () {
             try {
                 if (typeof THREE === 'undefined') {
-                    showStudioFallback('The 3D library failed to load (network or content blocker).');
+                    showStudioFallback(tx('The 3D library failed to load (network or content blocker).'));
                 } else if (!webglAvailable()) {
-                    showStudioFallback('WebGL is not available in this browser.');
+                    showStudioFallback(tx('WebGL is not available in this browser.'));
                 } else {
                     initThreeStudio();
                 }
