@@ -2230,39 +2230,35 @@
             const hairCap = new THREE.Mesh(new THREE.SphereGeometry(HR * 1.07, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.5), M.hair);
             hairCap.scale.set(1.04, 1.0, 1.02); hairCap.position.set(0, 0.145, -0.012); hairCap.rotation.x = -0.32; headBone.add(hairCap);
             blob(HR * 1.04, 1.02, 0.98, 0.9, M.hair, 0, 0.12, -0.04, headBone, 32);          // back of head
-            const spike = (len, r, x, y, z, rx, ry, rz) => {
-                const m = new THREE.Mesh(new THREE.ConeGeometry(r, len, 10, 1), M.hair);
-                m.position.set(x, y, z); m.rotation.set(rx, ry, rz); headBone.add(m); return m;
-            };
-            // fringe: points down/forward over the forehead, swept to one side
-            [[-0.13, 0.11, 0.35], [-0.075, 0.125, 0.25], [-0.02, 0.13, 0.15], [0.035, 0.13, 0.05], [0.09, 0.12, -0.05], [0.14, 0.105, -0.15]]
-                .forEach(([x, len, rz]) => {
-                    const lock = spike(len, 0.058, x, 0.27 - Math.abs(x) * 0.18, 0.165 - Math.abs(x) * 0.3, 2.78, 0, rz - x * 0.9);
-                    lock.scale.z = 0.55;
-                });
-            // crown and sides: spikes pointing outward
-            for (let i = 0; i < 14; i++) {
-                const a = (i / 14) * Math.PI * 2;
-                const front = Math.cos(a - Math.PI / 2);   // +1 at the front
-                if (front > 0.55) continue;                  // fringe covers the front
-                const x = Math.cos(a) * 0.17, z = -Math.sin(a) * 0.17;
-                const m = spike(0.16, 0.06, x, 0.2, z, 0, 0, 0);
-                m.lookAt(headBone.localToWorld ? V3(x * 3, 0.32, z * 3) : V3());
-                m.rotateX(Math.PI / 2);
+            // Short natural men's cut: soft textured top with a slight side-swept quiff, tapered sides, neat back
+            blob(0.118, 1.0, 0.55, 1.05, M.hair, 0, 0.292, -0.012, headBone, 32);             // top volume (inside the head outline)
+            const quiff = blob(0.078, 1.3, 0.62, 0.85, M.hair, 0.025, 0.296, 0.1, headBone, 28); // front quiff, lifted
+            quiff.rotation.set(-0.45, 0, -0.12);
+            const sweep = blob(0.07, 1.6, 0.45, 0.6, M.hair, -0.04, 0.262, 0.16, headBone, 24);   // fringe swept to the side
+            sweep.rotation.set(-0.35, 0, 0.22);
+            [-1, 1].forEach(sd => {                                                            // short tapered sides above the ears
+                const side = blob(0.095, 0.42, 0.62, 1.08, M.hair, sd * 0.172, 0.205, -0.012, headBone, 20);
+                side.rotation.z = sd * 0.12;
+            });
+            blob(0.16, 0.98, 0.7, 0.62, M.hair, 0, 0.19, -0.105, headBone, 28);                // back / nape, cut close
+            for (let k = 0; k < 9; k++) {                                                      // subtle texture tufts on top
+                const a2 = k * 2.4, r2 = 0.05 + (k % 3) * 0.035;
+                const tuft = blob(0.03, 1.3, 0.5, 1.0, M.hair, Math.cos(a2) * r2 * 0.8, 0.322 - r2 * 0.3, Math.sin(a2) * r2 * 0.7 + 0.005, headBone, 12);
+                tuft.rotation.set(-0.3 + Math.sin(a2) * 0.2, a2, 0);
             }
-            [[0, 0.33, -0.03, -0.9, 0.3], [0.08, 0.32, 0.02, -0.5, -0.9], [-0.08, 0.32, 0.0, -0.6, 0.9], [0.0, 0.31, -0.12, -1.3, 0]]
-                .forEach(([x, y, z, rx, rz]) => { const t = spike(0.15, 0.07, x, y, z, rx, 0, rz); t.scale.z = 0.7; });
-            [-1, 1].forEach(s => { const l = spike(0.11, 0.045, s * 0.185, 0.17, 0.02, 0.15, 0, Math.PI + s * 0.12); l.scale.z = 0.6; }); // side locks over the ears
 
             // Arms: short black sleeve, skin arm, round hand
             const buildArm = (side, parent) => {
                 const shoulder = new THREE.Group(); shoulder.position.set(side * 0.165, 0.26, 0); parent.add(shoulder);
-                blob(0.058, 1, 1, 1, M.shirt, 0, -0.02, 0, shoulder, 18);
-                capsule(0.055, 0.05, M.shirt, shoulder).position.set(0, -0.06, 0);
-                capsule(0.036, 0.08, M.skin, shoulder).position.set(0, -0.11, 0);
-                const elbow = new THREE.Group(); elbow.position.set(0, -0.16, 0); shoulder.add(elbow);
-                capsule(0.034, 0.09, M.skin, elbow).position.set(0, -0.06, 0);
-                const hand = new THREE.Group(); hand.position.set(0, -0.125, 0); hand.scale.setScalar(1.25); elbow.add(hand);
+                // Realistic arm: rounded shoulder under the sleeve, upper arm that swells then tapers to the elbow,
+                // forearm thicker near the elbow and slimming to the wrist
+                blob(0.062, 1.05, 1.0, 1.0, M.shirt, 0, -0.012, 0, shoulder, 20);                         // deltoid / shoulder cap
+                shoulder.add(createOrganicLimb(V3(0, 0.01, 0), V3(0, -0.1, 0), 0.054, 0.058, 0.06, M.shirt)); // short sleeve
+                shoulder.add(createOrganicLimb(V3(0, -0.06, 0), V3(0, -0.19, 0), 0.034, 0.046, 0.042, M.skin)); // upper arm (biceps)
+                const elbow = new THREE.Group(); elbow.position.set(0, -0.19, 0); shoulder.add(elbow);
+                blob(0.035, 1, 1, 1, M.skin, 0, 0, 0, elbow, 16);                                         // elbow joint
+                elbow.add(createOrganicLimb(V3(0, 0, 0), V3(0, -0.15, 0), 0.025, 0.037, 0.034, M.skin));  // forearm
+                const hand = new THREE.Group(); hand.position.set(0, -0.152, 0); hand.scale.setScalar(1.2); elbow.add(hand);
                 // Mitten hand: palm and the four fingers form one rounded block; the thumb is joined at the side
                 blob(0.034, 1.0, 1.0, 0.62, M.skin, 0, -0.028, 0, hand, 20);                   // palm
                 blob(0.033, 0.98, 1.2, 0.58, M.skin, 0, -0.06, 0.006, hand, 20);               // fingers as one mitten tip
