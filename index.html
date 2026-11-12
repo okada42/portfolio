@@ -914,7 +914,7 @@
         // Responsive framing: narrow/portrait screens get a wider lens (vertical FOV grows so the
         // horizontal view stays wide) instead of pulling the camera back out of the room.
         // Phone framing (t = 1): small distance multiplier and target shift
-        const PHONE_VIEW = { k: 1.1, sx: -0.38, sy: 0.32 };
+        const PHONE_VIEW = { k: 1.1, sx: -0.05, sy: 0.32 };
         const BASE_FOV = 42;
         function fovForAspect(a) {
             const f = Math.min(1.75, Math.max(1, 1.3 / a));
@@ -1035,6 +1035,7 @@
         let characterRig = null;
         // Day / night lighting state (0 = day, 1 = night), eased each frame
         const studioLights = { spots: [] };
+        const deskProps = {};   // mouse / keyboard references for the working animation
         let nightTarget = 0, nightBlend = 0;
         const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
@@ -1787,7 +1788,7 @@
                 new THREE.BoxGeometry(1.06, 0.006, 0.42),
                 new THREE.MeshStandardMaterial({ map: matTex, roughness: 0.92 })
             );
-            deskMatMesh.position.set(deskX - 0.04, deskH + 0.025, deskZ + 0.16);
+            deskMatMesh.position.set(deskX - 0.04, deskH + 0.025, deskZ + 0.24);
             deskMatMesh.receiveShadow = true;
             deskGroup.add(deskMatMesh);
 
@@ -1902,7 +1903,7 @@
 
             // 6. Slim wireless keyboard: silver wedge with white keys
             const kbX = deskX - 0.12;
-            const kbZ = deskZ + 0.16;
+            const kbZ = deskZ + 0.3;
             const keyCanvas = document.createElement('canvas'); keyCanvas.width = 512; keyCanvas.height = 160;
             const kc = keyCanvas.getContext('2d');
             kc.fillStyle = '#C9CCD0'; kc.fillRect(0, 0, 512, 160);
@@ -1926,13 +1927,17 @@
             deskGroup.add(keyboard);
 
             // 7. Slim white wireless mouse
-            const mouseX = deskX + 0.28;
-            const mouseZ = deskZ + 0.17;
+            const mouseX = deskX + 0.22;
+            const mouseZ = deskZ + 0.3;
             const mouseBody = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), macWhiteMat);
             mouseBody.scale.set(0.032, 0.013, 0.058);
             mouseBody.position.set(mouseX, deskH + 0.03, mouseZ);
             mouseBody.castShadow = true;
             deskGroup.add(mouseBody);
+            deskProps.mouse = mouseBody;
+            deskProps.mouseHome = mouseBody.position.clone();
+            deskProps.deskH = deskH;
+            deskProps.kbLeft = new THREE.Vector3(kbX - 0.08, deskH + 0.06, kbZ);
 
             // 8. Pair of Minimalist Matte-Black Studio Monitor Speakers
             [-0.84, 0.98].forEach((offsetX, idx) => {
@@ -2087,8 +2092,8 @@
         // Ergonomic swivel studio chair + organically sculpted 3D human developer seated on the left side of the PC
         function buildChairAndCharacter() {
             const group = new THREE.Group();
-            group.position.set(-0.15, 0, -0.05);
-            group.rotation.y = 1.9; // rest: turned toward the desk / monitors
+            group.position.set(1.42, 0, -0.3);   // centred in front of the Mac
+            group.rotation.y = Math.PI;          // facing the desk
 
             // Swivel Assembly (so the whole chair + char rotates)
             const swivelGroup = new THREE.Group();
@@ -2281,7 +2286,7 @@
 
             charGroup.traverse(o => { if (o.isMesh) { o.castShadow = o.material !== faceMat; o.receiveShadow = true; } });
 
-            const bones = { Torso: torsoBone, Head: headBone, UpperArmR: armR.shoulder, LowerArmR: armR.elbow, FistR: armR.hand, UpperArmL: armL.shoulder };
+            const bones = { Torso: torsoBone, Head: headBone, UpperArmR: armR.shoulder, LowerArmR: armR.elbow, FistR: armR.hand, UpperArmL: armL.shoulder, LowerArmL: armL.elbow };
             const base = {};
             Object.keys(bones).forEach(n => base[n] = bones[n].quaternion.clone());
             // Assigned to characterRig once it exists (below)
@@ -2749,7 +2754,8 @@
                     }
                 }
 
-                characterRig.swivelGroup.rotation.y = greetBlend * -1.6; // swivel round to face the visitor
+                characterRig.swivelGroup.rotation.y = greetBlend * Math.PI;           // swivel round to face the visitor
+                characterRig.rootGroup.position.z = -0.3 + greetBlend * 0.32;    // roll the chair back first
                 characterRig.welcomeBadge.material.opacity = greetBlend;
                 characterRig.welcomeBadge.position.y = 1.42 + Math.sin(t * 2.0) * 0.015;
 
@@ -2770,14 +2776,85 @@
                         bone.quaternion.premultiply(tmp);
                     };
                     const reset = (name) => { if (rig.bones[name] && rig.base[name]) rig.bones[name].quaternion.copy(rig.base[name]); };
-                    ['Head', 'Torso', 'UpperArmR', 'LowerArmR', 'FistR'].forEach(reset);
+                    ['Head', 'Torso', 'UpperArmR', 'LowerArmR', 'FistR', 'UpperArmL', 'LowerArmL'].forEach(reset);
+                    const work = 1 - greetBlend;
 
-                    turn('Torso', 1, 0, 0, Math.sin(t) * 0.02 - greetBlend * 0.05);
-                    turn('Head', 0, 1, 0, (1 - greetBlend) * Math.sin(t * 0.45) * 0.12 + greetBlend * 0.1);
+                    turn('Torso', 1, 0, 0, Math.sin(t) * 0.02 + work * 0.2 - greetBlend * 0.05);   // lean in to work
+                    turn('Head', 0, 1, 0, work * Math.sin(t * 0.35) * 0.08 + greetBlend * 0.1);
+                    turn('Head', 1, 0, 0, work * 0.12);                                              // eyes on the screen
                     turn('Head', 0, 0, 1, waveAngle * 0.08);
-                    // Raise right arm out and up, bend elbow, wave forearm
-                    turn('UpperArmR', 0, 0, 1, -greetBlend * WAVE_RAISE);
-                    turn('LowerArmR', 0, 0, 1, -greetBlend * WAVE_BEND + waveAngle * 1.2);
+                    // Waving pose for the right arm (used while greeting)
+                    turn('UpperArmR', 0, 0, 1, -WAVE_RAISE);
+                    turn('LowerArmR', 0, 0, 1, -WAVE_BEND + waveAngle * 1.2);
+                    const waveU = rig.bones.UpperArmR.quaternion.clone(), waveL = rig.bones.LowerArmR.quaternion.clone();
+
+                    // Working pose: aim each arm at its target (right -> mouse, left -> keyboard)
+                    // Arm reach measured from the actual rig (shoulder -> palm centre), cached once
+                    if (!rig.armReach) {
+                        const sh = new THREE.Vector3(), palm = new THREE.Vector3(0, -0.045, 0);
+                        const savedL = rig.bones.LowerArmR.quaternion.clone();
+                        rig.bones.LowerArmR.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.3);   // same elbow bend as the working pose
+                        rig.bones.UpperArmR.updateMatrixWorld(true);
+                        rig.bones.UpperArmR.getWorldPosition(sh);
+                        rig.bones.FistR.localToWorld(palm);
+                        rig.armReach = sh.distanceTo(palm);
+                        rig.bones.LowerArmR.quaternion.copy(savedL);
+                    }
+                    const REACH = rig.armReach;
+                    const aim = (upperName, target) => {
+                        const up = rig.bones[upperName];
+                        up.parent.updateMatrixWorld(true);
+                        const S = new THREE.Vector3(); up.getWorldPosition(S);
+                        const dir = target.clone().sub(S).normalize();
+                        up.parent.getWorldQuaternion(pq);
+                        dir.applyQuaternion(pq.clone().invert());
+                        return { q: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir), S };
+                    };
+                    const elbowBend = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.3);
+
+                    let mouseTarget = null;
+                    if (deskProps.mouse && work > 0.001) {
+                        // Mouse home sits exactly at arm's reach; it glides in a small loop while he works
+                        const shoulder = new THREE.Vector3();
+                        rig.bones.UpperArmR.parent.updateMatrixWorld(true);
+                        rig.bones.UpperArmR.getWorldPosition(shoulder);
+                        const handY = deskProps.deskH + 0.05;   // palm resting on top of the mouse
+                        const dy = shoulder.y - handY;
+                        const hd = Math.sqrt(Math.max(0.01, REACH * REACH - dy * dy));
+                        const flat = new THREE.Vector3(deskProps.mouseHome.x - shoulder.x, 0, deskProps.mouseHome.z - shoulder.z).normalize();
+                        const home = new THREE.Vector3(shoulder.x + flat.x * hd, handY, shoulder.z + flat.z * hd);
+                        const tt = performance.now() * 0.001;
+                        home.x += Math.sin(tt * 1.3) * 0.03;
+                        home.z += Math.sin(tt * 2.1) * 0.018;
+                        if (greetBlend < 0.02) deskProps.mouse.position.set(home.x, deskProps.deskH + 0.03, home.z);
+                        mouseTarget = home;
+                    }
+                    const R = rig.bones.UpperArmR, RL = rig.bones.LowerArmR;
+                    if (mouseTarget) {
+                        // Aim, measure where the palm actually lands, correct the aim point (elbow bend offsets it)
+                        let aimPoint = mouseTarget.clone();
+                        let ik = null;
+                        RL.quaternion.copy(elbowBend);
+                        for (let it = 0; it < 3; it++) {
+                            ik = aim('UpperArmR', aimPoint);
+                            R.quaternion.copy(ik.q);
+                            R.updateMatrixWorld(true);
+                            const palm = new THREE.Vector3(0, -0.045, 0);
+                            rig.bones.FistR.localToWorld(palm);
+                            aimPoint.add(mouseTarget.clone().sub(palm));
+                        }
+                        R.quaternion.copy(ik.q).slerp(waveU, greetBlend);
+                        RL.quaternion.copy(elbowBend).slerp(waveL, greetBlend);
+                    } else {
+                        R.quaternion.copy(waveU); RL.quaternion.copy(waveL);
+                    }
+                    if (deskProps.kbLeft && rig.bones.UpperArmL) {
+                        const ikL = aim('UpperArmL', deskProps.kbLeft);
+                        const tap = Math.max(0, Math.sin(performance.now() * 0.012)) * 0.06 * work;   // light typing
+                        rig.bones.UpperArmL.quaternion.copy(rig.base.UpperArmL).slerp(ikL.q, work);
+                        rig.bones.LowerArmL.quaternion.copy(rig.base.LowerArmL).slerp(
+                            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.3 - tap), work);
+                    }
                 }
             }
 
