@@ -9,6 +9,7 @@
     <!-- Three.js & OrbitControls via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- Google Fonts: Inter & Noto Sans JP -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script>
@@ -903,6 +904,7 @@
         let monitorAnimTick = 0;
         let pcFanMeshes = [];
         let characterRig = null;
+        const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
             active: false,
             startTime: 0,
@@ -1786,208 +1788,55 @@
             rod(new THREE.Vector3(-0.24, 0.015, 0.3), new THREE.Vector3(0.24, 0.015, 0.3));
             swivelGroup.add(chairGroup);
 
-            // --- Character (realistic adult proportions, styled after reference) ---
+            // --- Character: Quaternius "Casual Male" (CC0), recolored to match the reference ---
             const charGroup = new THREE.Group();
-            charGroup.position.y = 0.49; // seat surface
+            const DEV_COLORS = { Skin: '#f1c6a3', Shirt: '#262626', Pants: '#1d1e22', Belt: '#111111', Face: '#2a1a12', Hair: '#5a3622' };
+            const SEAT_Y = 0.49;
+            const DEV_SCALE = 0.36;
+            if (THREE.GLTFLoader) {
+                new THREE.GLTFLoader().load('assets/models/developer.gltf', (gltf) => {
+                    const model = gltf.scene;
+                    model.traverse(o => {
+                        if (o.isMesh) {
+                            o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
+                            (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+                                if (DEV_COLORS[m.name]) m.color.set(DEV_COLORS[m.name]);
+                                m.roughness = 0.75;
+                            });
+                        }
+                    });
+                    model.scale.setScalar(DEV_SCALE);
+                    charGroup.add(model);
 
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xdcae8f, roughness: 0.62, metalness: 0.0 });
-            const lipMat = new THREE.MeshStandardMaterial({ color: 0xb87567, roughness: 0.5 });
-            const hairMat = new THREE.MeshStandardMaterial({ color: 0x4e3020, roughness: 0.72 });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x262626, roughness: 0.92 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1d1e22, roughness: 0.88 });
-            const shoeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf1f0ec, roughness: 0.55 });
-            const shoeBlackMat = new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.65 });
-            const scleraMat = new THREE.MeshStandardMaterial({ color: 0xf4f1ec, roughness: 0.3 });
-            const irisMat = new THREE.MeshStandardMaterial({ color: 0x3a2516, roughness: 0.2 });
-            const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
-            const teethMat = new THREE.MeshStandardMaterial({ color: 0xf6f3ea, roughness: 0.35 });
-            const V = (x, y, z) => new THREE.Vector3(x, y, z);
-            const ellip = (r, sx, sy, sz, mat, x, y, z, seg = 24) => {
-                const m = new THREE.Mesh(new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75)), mat);
-                m.scale.set(sx, sy, sz); m.position.set(x, y, z);
-                return m;
-            };
+                    // Freeze the last frame of the SitDown clip as the seated pose
+                    const mixer = new THREE.AnimationMixer(model);
+                    const sit = THREE.AnimationClip.findByName(gltf.animations, 'SitDown');
+                    if (sit) {
+                        const act = mixer.clipAction(sit);
+                        act.setLoop(THREE.LoopOnce); act.clampWhenFinished = true; act.play();
+                        mixer.setTime(sit.duration - 0.001);
+                    }
+                    model.updateMatrixWorld(true);
 
-            // Pelvis / hips
-            charGroup.add(ellip(0.15, 1.12, 0.62, 0.85, pantsMat, 0, 0.07, 0.0));
+                    // Put the hips on the seat
+                    const bones = {};
+                    model.traverse(o => { if (o.isBone) bones[o.name.replace(/\./g, '')] = o; }); // GLTFLoader strips dots from names
+                    if (bones.Hips) {
+                        const hip = new THREE.Vector3();
+                        bones.Hips.getWorldPosition(hip);
+                        charGroup.worldToLocal(hip);
+                        model.position.y += SEAT_Y - hip.y + 0.03;
+                        model.position.z += -hip.z - 0.02;
+                    }
 
-            // Torso: lathe profile (waist -> chest -> shoulders), flattened front-to-back
-            const torsoPivot = new THREE.Group();
-            torsoPivot.position.y = 0.09;
-            charGroup.add(torsoPivot);
-            const torsoProfile = [
-                [0.001, -0.02], [0.125, -0.01], [0.13, 0.08], [0.145, 0.2],
-                [0.158, 0.3], [0.152, 0.38], [0.125, 0.44], [0.07, 0.475], [0.001, 0.48]
-            ].map(p => new THREE.Vector2(p[0], p[1]));
-            const torso = new THREE.Mesh(new THREE.LatheGeometry(torsoProfile, 32), shirtMat);
-            torso.scale.set(1.28, 1, 0.7);
-            torsoPivot.add(torso);
-            // Collar ring
-            const collar = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.009, 8, 24), shirtMat);
-            collar.rotation.x = Math.PI / 2 - 0.25;
-            collar.position.set(0, 0.47, 0.005);
-            torsoPivot.add(collar);
-            // Neck
-            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.05, 0.11, 20), skinMat);
-            neck.position.set(0, 0.52, 0.0);
-            torsoPivot.add(neck);
-
-            // Head
-            const headPivot = new THREE.Group();
-            headPivot.position.set(0, 0.64, 0.01);
-            headPivot.scale.setScalar(1.12);
-            torsoPivot.add(headPivot);
-            headPivot.add(ellip(0.105, 0.92, 1.12, 0.94, skinMat, 0, 0.0, -0.006, 40));          // cranium
-            headPivot.add(ellip(0.082, 0.95, 0.85, 0.98, skinMat, 0, -0.058, 0.022, 32));   // jaw/cheeks
-            headPivot.add(ellip(0.03, 1.1, 0.75, 0.9, skinMat, 0, -0.112, 0.06, 20));       // chin
-            [-1, 1].forEach(s => {
-                headPivot.add(ellip(0.024, 0.45, 1.0, 0.75, skinMat, s * 0.096, -0.012, -0.005, 16)); // ears
-                // Eyes
-                const eye = new THREE.Group();
-                eye.position.set(s * 0.036, 0.004, 0.084);
-                eye.add(new THREE.Mesh(new THREE.SphereGeometry(0.0135, 20, 16), scleraMat));
-                const iris = new THREE.Mesh(new THREE.SphereGeometry(0.0075, 16, 12), irisMat);
-                iris.position.z = 0.0085; iris.scale.z = 0.5; eye.add(iris);
-                const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.0036, 10, 8), pupilMat);
-                pupil.position.z = 0.0122; pupil.scale.z = 0.4; eye.add(pupil);
-                headPivot.add(eye);
-                // Upper eyelid
-                const lid = new THREE.Mesh(new THREE.SphereGeometry(0.0145, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.42), skinMat);
-                lid.position.copy(eye.position); lid.position.z += 0.0015; lid.scale.setScalar(1.06); lid.rotation.x = -0.55;
-                headPivot.add(lid);
-                // Brows
-                const brow = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.006, 0.008), hairMat);
-                brow.position.set(s * 0.037, 0.026, 0.097);
-                brow.rotation.set(-0.2, -s * 0.25, s * -0.08);
-                headPivot.add(brow);
-            });
-            // Nose: bridge + tip + nostrils
-            const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.012, 0.04, 12), skinMat);
-            bridge.position.set(0, -0.014, 0.096); bridge.rotation.x = 0.3;
-            headPivot.add(bridge);
-            headPivot.add(ellip(0.012, 1.15, 0.9, 1.0, skinMat, 0, -0.035, 0.103, 16));
-            [-1, 1].forEach(s => headPivot.add(ellip(0.008, 1.0, 0.8, 1.0, skinMat, s * 0.011, -0.039, 0.096, 12)));
-            // Lips (rest expression)
-            const upperLip = ellip(0.016, 1.55, 0.35, 0.6, lipMat, 0, -0.062, 0.093, 16);
-            const lowerLip = ellip(0.015, 1.4, 0.42, 0.65, lipMat, 0, -0.069, 0.091, 16);
-            headPivot.add(upperLip, lowerLip);
-            // Teeth reveal for the greeting smile (scaled by animation via characterRig.smileTeeth)
-            const smileTeeth = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.019, 0.008, 20, 1, false, -Math.PI / 2, Math.PI), teethMat);
-            smileTeeth.rotation.x = Math.PI / 2;
-            smileTeeth.position.set(0, -0.064, 0.098);
-            headPivot.add(smileTeeth);
-
-            // Hair: scalp cap + volume + side-swept fringe (as in reference)
-            const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.111, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.4), hairMat);
-            hairCap.scale.set(0.96, 1.1, 1.06);
-            hairCap.position.set(0, 0.012, -0.012);
-            hairCap.rotation.x = -0.42;
-            headPivot.add(hairCap);
-            headPivot.add(ellip(0.1, 0.98, 0.95, 0.9, hairMat, 0, -0.005, -0.03, 32));    // back volume
-            [[-0.035, 0.088, 0.062, 0.04, 1.5, 0.42, 1.0, 0.2],
-             [ 0.02, 0.098, 0.058, 0.045, 1.6, 0.42, 1.1, 0.3],
-             [ 0.06, 0.082, 0.06, 0.035, 1.4, 0.45, 1.0, 0.55],
-             [ 0.0, 0.112, 0.01, 0.06, 1.55, 0.38, 1.35, 0.1]].forEach(([x, y, z, r, sx, sy, sz, rz]) => {
-                const tuft = ellip(r, sx, sy, sz, hairMat, x, y, z, 20);
-                tuft.rotation.z = -rz; tuft.rotation.x = -0.25;
-                headPivot.add(tuft);
-            });
-            [-1, 1].forEach(s => headPivot.add(ellip(0.03, 0.4, 1.1, 0.9, hairMat, s * 0.094, 0.02, -0.01, 12))); // sideburns
-
-            // Realistic hand (origin at wrist, fingers along -Y)
-            const makeHand = (side) => {
-                const hand = new THREE.Group();
-                hand.scale.setScalar(0.82);
-                const palm = ellip(0.04, 1.05, 1.15, 0.45, skinMat, 0, -0.045, 0, 16);
-                hand.add(palm);
-                [-0.027, -0.009, 0.009, 0.027].forEach((x, i) => {
-                    const len = [0.05, 0.062, 0.058, 0.045][i];
-                    const f = new THREE.Mesh(createCapsuleGeo(0.0085, len), skinMat);
-                    f.position.set(x * side, -0.09 - len * 0.45, 0.004);
-                    f.rotation.x = 0.25;
-                    hand.add(f);
-                });
-                const thumb = new THREE.Mesh(createCapsuleGeo(0.01, 0.04), skinMat);
-                thumb.position.set(0.04 * side, -0.05, 0.016);
-                thumb.rotation.set(0.4, 0, side * 0.7);
-                hand.add(thumb);
-                return hand;
-            };
-            // Arm segment helpers (short black sleeve over the upper arm)
-            const UPPER = 0.28, FORE = 0.25;
-            const addUpperArm = (parent) => {
-                parent.add(createOrganicLimb(V(0, 0.01, 0), V(0, -UPPER, 0), 0.046, 0.042, 0.036, skinMat));
-                const sleeve = createOrganicLimb(V(0, 0.02, 0), V(0, -0.12, 0), 0.052, 0.054, 0.052, shirtMat);
-                parent.add(sleeve);
-                parent.add(ellip(0.05, 1, 0.85, 0.95, shirtMat, 0, -0.005, 0, 20)); // shoulder cap
-            };
-            const addForearm = (parent) => {
-                parent.add(ellip(0.038, 1, 1, 1, skinMat, 0, 0, 0, 16)); // elbow
-                parent.add(createOrganicLimb(V(0, 0, 0), V(0, -FORE, 0), 0.038, 0.036, 0.026, skinMat));
-            };
-
-            // Left arm: reaches forward to the desk
-            const leftShoulderPivot = new THREE.Group();
-            leftShoulderPivot.position.set(0.17, 0.41, 0);
-            torsoPivot.add(leftShoulderPivot);
-            const leftPose = new THREE.Group();
-            leftPose.rotation.set(-0.75, 0, 0.1);
-            leftShoulderPivot.add(leftPose);
-            addUpperArm(leftPose);
-            const leftElbow = new THREE.Group();
-            leftElbow.position.y = -UPPER;
-            leftElbow.rotation.x = -0.85;
-            leftPose.add(leftElbow);
-            addForearm(leftElbow);
-            const leftHand = makeHand(1);
-            leftHand.position.y = -FORE;
-            leftHand.rotation.x = 0.2;
-            leftElbow.add(leftHand);
-
-            // Right arm: waving rig used by characterRig
-            const rightShoulderPivot = new THREE.Group();
-            rightShoulderPivot.position.set(-0.17, 0.41, 0);
-            torsoPivot.add(rightShoulderPivot);
-            addUpperArm(rightShoulderPivot);
-            const rightElbowPivot = new THREE.Group();
-            rightElbowPivot.position.y = -UPPER;
-            rightShoulderPivot.add(rightElbowPivot);
-            addForearm(rightElbowPivot);
-            const rightWristPivot = new THREE.Group();
-            rightWristPivot.position.y = -FORE;
-            rightElbowPivot.add(rightWristPivot);
-            rightWristPivot.add(makeHand(-1));
-
-            // Legs: thigh forward along seat, shin down to the floor
-            const FLOOR = -0.49;
-            [-1, 1].forEach(s => {
-                const hip = V(s * 0.09, 0.06, 0.02), knee = V(s * 0.1, 0.06, 0.44), ankle = V(s * 0.1, FLOOR + 0.08, 0.48);
-                charGroup.add(createOrganicLimb(hip, knee, 0.085, 0.082, 0.06, pantsMat));
-                charGroup.add(ellip(0.062, 1, 1, 1, pantsMat, knee.x, knee.y, knee.z, 16));
-                charGroup.add(createOrganicLimb(knee, ankle, 0.058, 0.055, 0.042, pantsMat));
-                charGroup.add(ellip(0.044, 1, 0.5, 1, pantsMat, ankle.x, ankle.y + 0.005, ankle.z, 16)); // hem
-            });
-
-            // Sneakers: white sole, black upper, white toe cap & side stripe
-            const createShoe = () => {
-                const g = new THREE.Group();
-                const sole = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.028, 0.27), shoeWhiteMat);
-                sole.position.set(0, 0.014, 0.05);
-                g.add(sole);
-                g.add(ellip(0.06, 0.8, 0.62, 2.0, shoeBlackMat, 0, 0.045, 0.04, 24));   // upper
-                g.add(ellip(0.045, 1.0, 0.55, 1.1, shoeWhiteMat, 0, 0.04, 0.14, 16));   // toe cap
-                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.012, 0.09), shoeWhiteMat);
-                stripe.position.set(0, 0.05, 0.02); stripe.rotation.x = -0.35;
-                g.add(stripe);
-                g.add(ellip(0.035, 1.1, 0.6, 1.0, shoeBlackMat, 0, 0.085, -0.02, 16));  // collar
-                return g;
-            };
-            const leftShoe = createShoe();
-            leftShoe.position.set(0.1, FLOOR, 0.46);
-            charGroup.add(leftShoe);
-            const rightShoe = createShoe();
-            rightShoe.position.set(-0.1, FLOOR, 0.46);
-            charGroup.add(rightShoe);
+                    const base = {};
+                    ['Head', 'Torso', 'UpperArmR', 'LowerArmR', 'FistR', 'UpperArmL'].forEach(n => {
+                        if (bones[n]) base[n] = bones[n].quaternion.clone();
+                    });
+                    characterRig.bones = bones;
+                    characterRig.base = base;
+                }, undefined, (err) => console.error('[studio] developer model failed to load:', err));
+            }
 
             swivelGroup.add(charGroup);
 
@@ -2020,15 +1869,11 @@
             // Map elements to characterRig exactly as animateThreeStudio expects
             characterRig = {
                 rootGroup: group,
+                charGroup,
                 swivelGroup,
-                torsoPivot,
-                headPivot,
-                smileTeeth,
                 welcomeBadge,
-                leftShoulderPivot,
-                rightShoulderPivot,
-                rightElbowPivot,
-                rightWristPivot
+                bones: null,
+                base: null
             };
         }
 
@@ -2400,27 +2245,35 @@
                 }
 
                 characterRig.swivelGroup.rotation.y = greetBlend * -1.6; // swivel round to face the visitor
-                characterRig.torsoPivot.rotation.y = greetBlend * 0.25;
-                characterRig.torsoPivot.rotation.x = 0.06 + Math.sin(t) * 0.012 - greetBlend * 0.04;
-                characterRig.headPivot.rotation.y = greetBlend * 0.14 + (1 - greetBlend) * Math.sin(t * 0.45) * 0.06;
-                characterRig.headPivot.rotation.z = greetBlend * -0.05 + waveAngle * 0.07;
-
-                const smileScale = Math.max(0.01, greetBlend);
-                characterRig.smileTeeth.scale.set(smileScale, smileScale, 1);
-
                 characterRig.welcomeBadge.material.opacity = greetBlend;
                 characterRig.welcomeBadge.position.y = 1.42 + Math.sin(t * 2.0) * 0.015;
 
-                characterRig.rightShoulderPivot.rotation.x = greetBlend * 1.42 + (1 - greetBlend) * Math.cos(t * 4.8) * 0.016;
-                characterRig.rightShoulderPivot.rotation.z = greetBlend * -0.58;
-                characterRig.rightShoulderPivot.rotation.y = greetBlend * 0.22;
+                // Bone-driven pose on top of the frozen seated pose
+                const rig = characterRig;
+                if (rig.bones && rig.base) {
+                    const gq = new THREE.Quaternion();
+                    rig.charGroup.getWorldQuaternion(gq);
+                    const pq = new THREE.Quaternion();
+                    const tmp = new THREE.Quaternion();
+                    // Rotate a bone about an axis given in the character's own space (x: left, y: up, z: forward)
+                    const turn = (name, ax, ay, az, angle) => {
+                        const bone = rig.bones[name], base = rig.base[name];
+                        if (!bone || !base) return;
+                        bone.parent.getWorldQuaternion(pq);
+                        const axis = new THREE.Vector3(ax, ay, az).normalize().applyQuaternion(gq).applyQuaternion(pq.invert());
+                        tmp.setFromAxisAngle(axis, angle);
+                        bone.quaternion.premultiply(tmp);
+                    };
+                    const reset = (name) => { if (rig.bones[name] && rig.base[name]) rig.bones[name].quaternion.copy(rig.base[name]); };
+                    ['Head', 'Torso', 'UpperArmR', 'LowerArmR', 'FistR'].forEach(reset);
 
-                characterRig.rightElbowPivot.rotation.x = greetBlend * 1.22;
-                characterRig.rightElbowPivot.rotation.z = greetBlend * -0.25 + waveAngle;
-                characterRig.rightWristPivot.rotation.x = greetBlend * 0.65;
-                characterRig.rightWristPivot.rotation.z = waveAngle * 0.85;
-
-                characterRig.leftShoulderPivot.rotation.x = (1 - greetBlend) * Math.sin(t * 5.2) * 0.016;
+                    turn('Torso', 1, 0, 0, Math.sin(t) * 0.02 - greetBlend * 0.05);
+                    turn('Head', 0, 1, 0, (1 - greetBlend) * Math.sin(t * 0.45) * 0.12 + greetBlend * 0.1);
+                    turn('Head', 0, 0, 1, waveAngle * 0.08);
+                    // Raise right arm out and up, bend elbow, wave forearm
+                    turn('UpperArmR', 0, 0, 1, -greetBlend * WAVE_RAISE);
+                    turn('LowerArmR', 0, 0, 1, -greetBlend * WAVE_BEND + waveAngle * 1.2);
+                }
             }
 
             updateMonitorCanvas();
