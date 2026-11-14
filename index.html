@@ -1042,7 +1042,8 @@
         // Day / night lighting state (0 = day, 1 = night), eased each frame
         const studioLights = { spots: [] };
         const deskProps = {};
-        const localizedTextures = [];   // callbacks that redraw canvas textures when the language changes   // mouse / keyboard references for the working animation
+        const localizedTextures = [];
+        const frameArtMaterials = [];   // print surfaces of the 8 frames (glow at night)   // callbacks that redraw canvas textures when the language changes   // mouse / keyboard references for the working animation
         let nightTarget = 0, nightBlend = 0;
         const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
@@ -1116,17 +1117,18 @@
             studioLights.dir = dirLight;
 
             // Gallery picture lights: warm, focused beams on the frame wall and bookshelf
-            const addSpot = (intensity, angle, px, py, pz, tx, ty, tz) => {
+            const addSpot = (intensity, angle, px, py, pz, tx, ty, tz, nightMul = 0.5) => {
                 const sp = new THREE.SpotLight(0xffe9c7, intensity, 9, angle, 0.55, 1.2);
                 sp.position.set(px, py, pz);
                 sp.target.position.set(tx, ty, tz);
                 scene.add(sp); scene.add(sp.target);
                 sp.userData.dayIntensity = intensity;
+                sp.userData.nightMul = nightMul;
                 studioLights.spots.push(sp);
                 return sp;
             };
-            addSpot(1.0, Math.PI / 7, 0.76, 4.2, 0.4, 0.76, 2.25, -1.9);   // left frame group
-            addSpot(1.0, Math.PI / 7, 2.20, 4.2, 0.4, 2.20, 2.25, -1.9);   // right frame group
+            addSpot(1.0, Math.PI / 7, 0.76, 4.2, 0.4, 0.76, 2.25, -1.9, 2.2);   // left frame group (brighter at night)
+            addSpot(1.0, Math.PI / 7, 2.20, 4.2, 0.4, 2.20, 2.25, -1.9, 2.2);   // right frame group (brighter at night)
             addSpot(0.6, Math.PI / 9, 1.48, 4.2, 0.2, 1.48, 3.2, -1.75);   // bookshelf
             addSpot(0.35, Math.PI / 6, 1.0, 4.2, 1.5, 0.9, 0.6, -0.6);     // desk + developer
 
@@ -1540,7 +1542,11 @@
                     new THREE.PlaneGeometry(0.80, 0.54),
                     new THREE.MeshStandardMaterial({ map: artTex, roughness: 0.4 })
                 );
-                localizedTextures.push(() => { const m = artMesh.material; if (m.map) m.map.dispose(); m.map = createProjectFrameTexture(proj, idx); m.needsUpdate = true; });
+                localizedTextures.push(() => { const m = artMesh.material; if (m.map) m.map.dispose(); m.map = createProjectFrameTexture(proj, idx); m.emissiveMap = m.map; m.needsUpdate = true; });
+                artMesh.material.emissive = new THREE.Color('#ffffff');
+                artMesh.material.emissiveMap = artTex;
+                artMesh.material.emissiveIntensity = 0;
+                frameArtMaterials.push(artMesh.material);
                 artMesh.position.z = 0.0325;
 
                 artMesh.userData = {
@@ -2749,7 +2755,9 @@
             studioLights.ambient.color.copy(DAY_AMB).lerp(NIGHT_AMB, b);
             studioLights.dir.intensity = L(0.6, 0.07, b);
             studioLights.dir.color.copy(DAY_DIR).lerp(NIGHT_DIR, b);
-            studioLights.spots.forEach(sp => sp.intensity = sp.userData.dayIntensity * L(1, 0.5, b));
+            studioLights.spots.forEach(sp => sp.intensity = sp.userData.dayIntensity * L(1, sp.userData.nightMul, b));
+            // Pictures get a soft self-glow at night so their text stays readable
+            frameArtMaterials.forEach(m => { m.emissiveIntensity = 0.45 * b; });
             if (studioLights.lamp) {
                 studioLights.lamp.spot.intensity = 2.6 * b;
                 studioLights.lamp.glow.intensity = 0.9 * b;
