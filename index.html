@@ -1403,23 +1403,23 @@
 
             // Number
             ctx.fillStyle = '#FDE68A';
-            ctx.font = `700 32px ${JP}`;
-            ctx.fillText(getLang() === 'ja' ? `作品 0${index + 1}` : `PROJECT 0${index + 1}`, 80, 104);
+            ctx.font = `800 40px ${JP}`;
+            ctx.fillText(getLang() === 'ja' ? `作品 0${index + 1}` : `PROJECT 0${index + 1}`, 72, 100);
 
             // Title: large, up to two lines
             ctx.fillStyle = '#FFFFFF';
-            drawWrapped(ctx, proj.title, 80, 186, W - 160, 2, 64, 40, 800, JP, 1.2);
+            drawWrapped(ctx, proj.title, 72, 192, W - 144, 2, 84, 48, 800, JP, 1.15);
 
             // Key result
             ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
-            ctx.font = `600 30px ${JP}`;
-            ctx.fillText(proj.metricLabel, 80, 388);
+            ctx.font = `700 36px ${JP}`;
+            ctx.fillText(proj.metricLabel, 72, 398);
             ctx.fillStyle = '#FDE68A';
-            drawWrapped(ctx, proj.metricValue, 80, 460, W - 160, 1, 58, 32, 800, JP);
+            drawWrapped(ctx, proj.metricValue, 72, 478, W - 144, 1, 72, 40, 800, JP);
 
             // Tech stack under the card: big, bold, black
             ctx.fillStyle = '#000000';
-            drawWrapped(ctx, proj.stackValue, 48, 600, W - 96, 2, 46, 28, 800, JP, 1.2);
+            drawWrapped(ctx, proj.stackValue, 40, 592, W - 80, 2, 56, 34, 800, JP, 1.12);
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.anisotropy = 8;
@@ -2788,9 +2788,9 @@
         function buildInteractionHints() {
             const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
             const HINTS = [
-                { key: 'project',   pos: new THREE.Vector3(0.2, 1.6, -1.8), ja: [touch ? 'タップで' : 'クリックで', '作品の詳細'], en: [touch ? 'Tap a frame' : 'Click a frame', 'for details'] },
-                { key: 'book',      pos: new THREE.Vector3(2.62, 3.25, -1.7),   ja: [touch ? 'タップで' : 'クリックで', 'スキルを見る'], en: [touch ? 'Tap a book' : 'Click a book', 'to see skills'] },
-                { key: 'monitor',   pos: new THREE.Vector3(2.85, 1.2, -1.0),    ja: [touch ? 'タップで' : 'クリックで', 'ライブデモ'], en: [touch ? 'Tap the screen' : 'Click the screen', 'for a live demo'] },
+                { key: 'project',   pos: new THREE.Vector3(0.4, 3.12, -1.78), ja: [touch ? 'タップで' : 'クリックで', '作品の詳細'], en: [touch ? 'Tap a frame' : 'Click a frame', 'for details'] },
+                { key: 'book',      pos: new THREE.Vector3(1.48, 3.72, -1.7),   ja: [touch ? 'タップで' : 'クリックで', 'スキルを見る'], en: [touch ? 'Tap a book' : 'Click a book', 'to see skills'] },
+                { key: 'monitor',   pos: new THREE.Vector3(1.42, 1.72, -1.05), size: 0.56,    ja: [touch ? 'タップで' : 'クリックで', 'ライブデモ'], en: [touch ? 'Tap the screen' : 'Click the screen', 'for a live demo'] },
                 { key: 'character', follow: true,                              ja: [touch ? 'タップで' : 'クリックで', 'あいさつ'], en: [touch ? 'Tap me' : 'Click me', 'to say hi'] }
             ];
             HINTS.forEach(h => {
@@ -2822,7 +2822,7 @@
                 sprite.renderOrder = 10;
                 sprite.scale.set(0.72, 0.225, 1);
                 if (h.pos) sprite.position.copy(h.pos);
-                sprite.userData = { key: h.key, follow: !!h.follow, seen: false, base: 0.72, phase: Math.random() * 6 };
+                sprite.userData = { key: h.key, follow: !!h.follow, seen: false, base: h.size || 0.72, phase: Math.random() * 6 };
                 scene.add(sprite);
                 interactionHints.push(sprite);
             });
