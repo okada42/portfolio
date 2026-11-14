@@ -4,6 +4,18 @@
  * Value = [Japanese, English]. A null Japanese entry means "keep the source text" (already natural Japanese).
  */
 window.I18N_DICT = {
+
+    // ---- At-a-glance navigation -------------------------------------------------------------
+    "Web開発・業務自動化エンジニア": [null, "Web Development & Automation Engineer"],
+    "番号のラベルを押すと、実績・スキル・デモが見られます": ["番号のラベルを押すと、実績・スキル・デモが見られます", "Press a numbered label to see projects, skills and a live demo"],
+    "実績 8件": ["実績 8件", "Projects (8)"],
+    "スキル": ["スキル", "Skills"],
+    "自動化デモ": ["自動化デモ", "Live demo"],
+    "まずはここをタップ": ["まずはここをタップ", "Start here"],
+    "実績一覧（8件）": [null, "All projects (8)"],
+    "閉じる": [null, "Close"],
+    "視点をリセット": [null, "Reset view"],
+
     // ---- Page / header -------------------------------------------------------------------------
     "Studio Portfolio | Senior Engineer & UI/UX Designer (15+ Years)": ["スタジオ・ポートフォリオ｜シニアエンジニア & UI/UXデザイナー（実務15年以上）", "Studio Portfolio | Senior Engineer & UI/UX Designer (15+ Years)"],
     "[ STUDIO ARCHIVE // GREETING ]": ["[ スタジオアーカイブ // ごあいさつ ]", "[ STUDIO ARCHIVE // GREETING ]"],
@@ -455,8 +467,8 @@ window.I18N_DICT = {
             n.__i18nSrc = key; n.__i18nPre = m[1]; n.__i18nPost = m[2];
             sourced.push(n);
         }
-        document.querySelectorAll('[placeholder],[title]').forEach(el => {
-            ['placeholder', 'title'].forEach(a => {
+        document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
+            ['placeholder', 'title', 'aria-label'].forEach(a => {
                 const v = el.getAttribute(a);
                 if (v && dict[norm(v)] && !(el.__i18nAttr && el.__i18nAttr[a])) {
                     el.__i18nAttr = el.__i18nAttr || {};

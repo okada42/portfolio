@@ -69,6 +69,50 @@
             .studio-legend > div { padding: 0.5rem 0.75rem !important; }
             .studio-legend .legend-buttons { flex-wrap: nowrap !important; overflow-x: auto; }
         }
+        /* --- At-a-glance hotspot labels & action bar --- */
+        .hotspot {
+            position: absolute; left: 0; top: 0; pointer-events: auto;
+            display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 16px 6px 8px;
+            background: rgba(26, 26, 26, 0.92); color: #fff; border: 2px solid #D9A441; border-radius: 9999px;
+            font: 700 15px/1.1 "Noto Sans JP", Inter, sans-serif; white-space: nowrap;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25); transform: translate(-50%, calc(-100% - 10px));
+            transition: background-color .2s, box-shadow .2s, opacity .2s; cursor: pointer;
+        }
+        .hotspot::after {
+            content: ''; position: absolute; left: 50%; bottom: -9px; margin-left: -8px;
+            border: 8px solid transparent; border-top-color: #D9A441; border-bottom: 0;
+        }
+        .hotspot:hover, .hotspot:focus-visible, .hotspot.is-hot {
+            background: #8B6F4E; box-shadow: 0 0 0 4px rgba(217,164,65,0.45), 0 8px 22px rgba(0,0,0,0.3); outline: none;
+        }
+        .hs-num {
+            display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9999px;
+            background: #D9A441; color: #1A1A1A; font: 800 14px/1 Inter, sans-serif; flex-shrink: 0;
+        }
+        .hs-nudge {
+            position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%);
+            background: #FDE68A; color: #1A1A1A; font: 700 13px/1.2 "Noto Sans JP", Inter, sans-serif;
+            padding: 6px 12px; border-radius: 9999px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); pointer-events: none;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .hs-nudge { animation: nudge-bob 1.2s ease-in-out infinite; }
+        }
+        @keyframes nudge-bob { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
+        .action-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px;
+            border-radius: 12px; background: rgba(255,255,255,0.96); border: 1px solid #E5E0D6; color: #1A1A1A;
+            font: 700 13px/1.1 "Noto Sans JP", Inter, sans-serif; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            transition: background-color .2s, box-shadow .2s;
+        }
+        .action-btn:hover, .action-btn:focus-visible, .action-btn.is-hot { background: #FDF6E3; box-shadow: 0 0 0 3px rgba(217,164,65,0.45); outline: none; }
+        .action-btn .hs-num { width: 22px; height: 22px; font-size: 12px; }
+        .action-btn { min-width: 0; }
+        @media (max-width: 430px) {
+            .action-btn { padding: 0 6px; font-size: 12px; gap: 4px; }
+            .action-btn .hs-num { width: 18px; height: 18px; font-size: 11px; }
+        }
+        @media (max-width: 370px) { .action-btn .hs-num { display: none; } }
+        @media (min-width: 640px) { .action-btn { font-size: 14px; padding: 0 18px; } }
         .drawer-transition {
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
         }
@@ -98,7 +142,7 @@
                 </button>
             </div>
 
-            <nav class="hidden lg:flex items-center space-x-1 bg-studioWarm/80 p-1 rounded-lg border border-subtleBorder">
+            <nav class="hidden xl:flex items-center space-x-1 bg-studioWarm/80 p-1 rounded-lg border border-subtleBorder">
                 <button id="nav-studio" onclick="switchTab('studio')" class="tab-btn px-3.5 py-1.5 rounded-md text-xs font-medium transition-all bg-white text-matteBlack shadow-sm">
                     [Studio 3D]
                 </button>
@@ -115,8 +159,8 @@
 
             <div class="flex items-center space-x-2">
                 <div class="flex items-center bg-studioWarm/80 p-0.5 rounded-lg border border-subtleBorder text-[11px] font-medium" role="group" aria-label="Language / 言語">
-                    <button data-lang-btn="en" onclick="setLanguage('en')" class="px-2 py-1 rounded-md text-inkGray transition-colors">EN</button>
-                    <button data-lang-btn="ja" onclick="setLanguage('ja')" class="px-2 py-1 rounded-md text-inkGray transition-colors">日本語</button>
+                    <button data-lang-btn="en" onclick="setLanguage('en')" class="min-h-[40px] min-w-[44px] px-2 rounded-md text-inkGray transition-colors">EN</button>
+                    <button data-lang-btn="ja" onclick="setLanguage('ja')" class="min-h-[40px] min-w-[44px] px-2 rounded-md text-inkGray transition-colors">日本語</button>
                 </div>
                 <button onclick="switchTab('contact')" class="px-3 sm:px-4 py-2 rounded-lg bg-matteBlack hover:bg-oakWood text-white text-xs font-medium tracking-wide transition-colors whitespace-nowrap">
                     ▶ ご相談<span class="hidden sm:inline">・お見積り</span>
@@ -124,7 +168,7 @@
             </div>
         </div>
 
-        <div class="lg:hidden flex items-center justify-around border-t border-subtleBorder bg-studioWarm/90 px-2 py-1.5 text-xs">
+        <div class="xl:hidden flex items-center justify-around border-t border-subtleBorder bg-studioWarm/90 px-2 py-1.5 text-xs">
             <button id="m-nav-studio" onclick="switchTab('studio')" class="px-2 py-1 rounded font-medium bg-white text-matteBlack shadow-sm">[Studio 3D]</button>
             <button id="m-nav-automation" onclick="switchTab('automation')" class="px-2 py-1 rounded text-inkGray">[Automation]</button>
             <button id="m-nav-career" onclick="switchTab('career')" class="px-2 py-1 rounded text-inkGray">[Career]</button>
@@ -135,7 +179,7 @@
     <!-- ===================================================================== -->
     <!-- VIEW 1: 3D ARCHITECTURAL STUDIO GALLERY (PRIMARY INTERACTIVE VIEW)    -->
     <!-- ===================================================================== -->
-    <main id="view-studio" class="pt-24 lg:pt-16 h-screen flex flex-col relative">
+    <main id="view-studio" class="pt-24 xl:pt-16 h-screen flex flex-col relative">
         <div id="canvas-container" class="flex-1 w-full h-full"></div>
 
         <!-- Hover Tooltip for 3D Objects -->
@@ -145,61 +189,44 @@
             <div id="tooltip-hint" class="text-[11px] text-stone-300 mt-0.5">▶ クリックして詳細を表示</div>
         </div>
 
-        <!-- Studio Overlay: Top-Left Architectural Legend & Quick Focus Buttons -->
-        <div class="studio-legend absolute top-[6.5rem] lg:top-20 left-3 right-3 sm:left-6 sm:right-auto z-20 sm:max-w-sm pointer-events-auto">
-            <div class="bg-studioWall/95 backdrop-blur-md border border-subtleBorder rounded-xl p-3 sm:p-4 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[11px] font-mono tracking-wider text-oakWood font-semibold uppercase">[ ARCHITECTURAL STUDIO ]</span>
-                    <button onclick="resetCameraView()" class="text-[11px] font-medium px-2.5 py-1 rounded bg-studioWarm hover:bg-subtleBorder text-matteBlack transition-colors border border-subtleBorder">
-                        ▶ Reset View
-                    </button>
-                </div>
-                <p class="short-hide hidden md:block text-xs text-inkGray leading-relaxed mb-3">
-                    デスク中央上の「スキル本棚」、左右の「壁掛け実績ギャラリー（全8作品）」、および「PCモニター」をクリックすると、詳細情報と業務成果をご確認いただけます。
-                </p>
-                <div class="legend-buttons grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 text-[11px] whitespace-nowrap">
-                    <button onclick="focusZone('galleryLeft')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
-                        〇 左ギャラリー (4作)
-                    </button>
-                    <button onclick="focusZone('bookshelf')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
-                        〇 中央スキル本棚
-                    </button>
-                    <button onclick="focusZone('galleryRight')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
-                        〇 右ギャラリー (4作)
-                    </button>
-                    <button onclick="focusZone('monitor')" class="px-2.5 py-1 rounded-md bg-white hover:bg-studioWarm border border-subtleBorder text-matteBlack font-medium transition-colors">
-                        〇 PCワークステーション
-                    </button>
-                </div>
+        <!-- Headline: who / what / what to do (readable at a glance) -->
+        <div id="studio-headline" class="pointer-events-none absolute top-[6.6rem] xl:top-[4.6rem] left-1/2 -translate-x-1/2 xl:left-6 xl:translate-x-0 z-20 w-[calc(100%-1.5rem)] max-w-xl xl:w-auto text-center xl:text-left">
+            <div class="inline-block bg-studioWall/95 border border-subtleBorder rounded-2xl px-4 py-2 sm:py-2.5 shadow-sm">
+                <div class="text-[15px] sm:text-lg font-bold text-matteBlack leading-snug">Web開発・業務自動化エンジニア</div>
+                <div class="short-hide text-[12px] sm:text-sm text-inkGray mt-0.5">番号のラベルを押すと、実績・スキル・デモが見られます</div>
             </div>
         </div>
 
-        <!-- Studio Overlay: Bottom-Left Controls Hint -->
-        <div class="hidden xl:flex items-center space-x-4 absolute bottom-5 left-6 z-20 bg-studioWall/90 backdrop-blur-sm border border-subtleBorder px-4 py-2 rounded-lg text-[11px] text-inkGray">
-            <span>[操作ガイド]</span>
-            <span>〇 ドラッグ: 視点回転</span>
-            <span>〇 スクロール: ズーム</span>
-            <span>〇 クリック: 作品・書籍・挨拶再生</span>
+        <!-- Always-visible labels pinned to the 3D objects (positioned every frame) -->
+        <div id="hotspots" class="pointer-events-none absolute inset-0 z-[15]" aria-label="Studio areas">
+            <button class="hotspot" data-zone="projects" onclick="openZone('projects')">
+                <span class="hs-num">1</span><span class="hs-text">実績 8件</span>
+                <span id="start-nudge" class="hs-nudge hidden">まずはここをタップ</span>
+            </button>
+            <button class="hotspot" data-zone="skills" onclick="openZone('skills')">
+                <span class="hs-num">2</span><span class="hs-text">スキル</span>
+            </button>
+            <button class="hotspot" data-zone="demo" onclick="openZone('demo')">
+                <span class="hs-num">3</span><span class="hs-text">自動化デモ</span>
+            </button>
         </div>
 
-        <!-- Quick Index Drawer Trigger (Bottom Right) -->
-        <div class="absolute bottom-4 sm:bottom-5 left-3 right-3 sm:left-auto sm:right-6 z-20 flex justify-center sm:justify-end space-x-2">
-            <button id="daynight-btn" onclick="toggleDayNight()" aria-pressed="false" title="Day / Night" class="px-3.5 py-2.5 rounded-xl bg-matteBlack hover:bg-oakWood text-white backdrop-blur-md border border-matteBlack shadow-sm text-xs font-medium transition-colors whitespace-nowrap">
+        <!-- Bottom action bar: the same three actions + small tools -->
+        <div class="absolute left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 flex items-stretch gap-1.5 sm:gap-2 sm:w-auto">
+            <button id="daynight-btn" onclick="toggleDayNight()" aria-pressed="false" title="Day / Night" class="shrink-0 min-w-[40px] sm:min-w-[44px] min-h-[44px] px-2.5 sm:px-3 rounded-xl bg-matteBlack hover:bg-oakWood text-white border border-matteBlack shadow-sm text-xs font-medium transition-colors whitespace-nowrap">
                 ☀<span class="hidden sm:inline"> Day</span>
             </button>
-            <button onclick="triggerDeveloperGreeting()" class="px-3.5 py-2.5 rounded-xl bg-studioWarm/95 hover:bg-white backdrop-blur-md border border-subtleBorder shadow-sm text-xs font-medium text-matteBlack transition-colors">
-                ▶ 挨拶を再生
-            </button>
-            <button onclick="openDirectoryModal()" class="px-4 py-2.5 rounded-xl bg-white/95 hover:bg-studioWarm backdrop-blur-md border border-subtleBorder shadow-sm text-xs font-medium text-matteBlack transition-colors">
-                [ 全8作品<span class="hidden sm:inline">・書籍一覧 / Index</span> ]
-            </button>
+            <button data-zone-btn="projects" onclick="openZone('projects')" class="action-btn flex-1 sm:flex-none"><span class="hs-num">1</span><span>実績 8件</span></button>
+            <button data-zone-btn="skills" onclick="openZone('skills')" class="action-btn flex-1 sm:flex-none"><span class="hs-num">2</span><span>スキル</span></button>
+            <button data-zone-btn="demo" onclick="openZone('demo')" class="action-btn flex-1 sm:flex-none"><span class="hs-num">3</span><span>自動化デモ</span></button>
+            <button onclick="resetCameraView()" title="視点をリセット" aria-label="視点をリセット" class="shrink-0 min-w-[40px] sm:min-w-[44px] min-h-[44px] rounded-xl bg-white/95 hover:bg-studioWarm border border-subtleBorder shadow-sm text-base text-matteBlack transition-colors">↺</button>
         </div>
     </main>
 
     <!-- ===================================================================== -->
     <!-- VIEW 2: BACKEND & PC TASK AUTOMATION SCREENING ROOM (2D INTERACTIVE)   -->
     <!-- ===================================================================== -->
-    <section id="view-automation" class="hidden pt-28 lg:pt-24 pb-20 px-4 sm:px-6 max-w-6xl mx-auto min-h-screen">
+    <section id="view-automation" class="hidden pt-28 xl:pt-24 pb-20 px-4 sm:px-6 max-w-6xl mx-auto min-h-screen">
         <div class="mb-10 border-b border-subtleBorder pb-6">
             <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ WORKFLOW AUTOMATION SCREENING ROOM ]</span>
             <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
@@ -308,7 +335,7 @@
     <!-- ===================================================================== -->
     <!-- VIEW 3: WORK EXPERIENCE & PROFILE (CLEAN JAPANESE EXECUTIVE LAYOUT)   -->
     <!-- ===================================================================== -->
-    <section id="view-career" class="hidden pt-28 lg:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
+    <section id="view-career" class="hidden pt-28 xl:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
         <div class="mb-10 border-b border-subtleBorder pb-6">
             <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ CAREER &amp; PROFESSIONAL PROFILE ]</span>
             <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
@@ -418,7 +445,7 @@
     <!-- ===================================================================== -->
     <!-- VIEW 4: CONTACT & RECEPTION DESK (PLATFORM LINKS & DIRECT INQUIRY)    -->
     <!-- ===================================================================== -->
-    <section id="view-contact" class="hidden pt-28 lg:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
+    <section id="view-contact" class="hidden pt-28 xl:pt-24 pb-20 px-4 sm:px-6 max-w-5xl mx-auto min-h-screen">
         <div class="mb-10 border-b border-subtleBorder pb-6">
             <span class="text-xs font-mono tracking-widest text-oakWood uppercase block mb-2">[ RECEPTION DESK &amp; CONNECTIONS ]</span>
             <h1 class="text-2xl sm:text-3xl font-medium text-matteBlack tracking-tight">
@@ -518,6 +545,17 @@
     <!-- ===================================================================== -->
     <!-- SLIDE-OVER DETAIL DRAWER (FOR 3D GALLERY FRAMES & 3D BOOKSHELF ITEMS) -->
     <!-- ===================================================================== -->
+    <!-- List sheet: readable cards for all projects / skills (full screen on phones, side panel on larger screens) -->
+    <div id="list-sheet-backdrop" onclick="closeListSheet()" class="fixed inset-0 z-50 hidden bg-matteBlack/40">
+        <div id="list-sheet" onclick="event.stopPropagation()" role="dialog" aria-modal="true" class="fixed inset-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[30rem] bg-studioWall shadow-2xl flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-subtleBorder pt-[max(1rem,env(safe-area-inset-top))]">
+                <h2 id="list-sheet-title" class="text-lg font-bold text-matteBlack">実績一覧（8件）</h2>
+                <button onclick="closeListSheet()" class="min-h-[44px] px-4 rounded-lg bg-white border border-subtleBorder text-sm font-medium">閉じる</button>
+            </div>
+            <div id="list-sheet-body" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        </div>
+    </div>
+
     <div id="detail-drawer-backdrop" onclick="closeDetailDrawer()" class="fixed inset-0 bg-matteBlack/35 backdrop-blur-xs z-50 hidden transition-opacity">
         <div id="detail-drawer" onclick="event.stopPropagation()" class="fixed top-0 right-0 bottom-0 w-full max-w-lg bg-studioWall border-l border-subtleBorder shadow-2xl p-6 sm:p-8 overflow-y-auto flex flex-col justify-between">
             <div>
@@ -1043,7 +1081,8 @@
         const studioLights = { spots: [] };
         const deskProps = {};
         const localizedTextures = [];
-        const frameArtMaterials = [];   // print surfaces of the 8 frames (glow at night)   // callbacks that redraw canvas textures when the language changes   // mouse / keyboard references for the working animation
+        const frameArtMaterials = [];
+        const bookSpineMaterials = [];   // print surfaces of the 8 frames (glow at night)   // callbacks that redraw canvas textures when the language changes   // mouse / keyboard references for the working animation
         let nightTarget = 0, nightBlend = 0;
         const WAVE_RAISE = 2.3, WAVE_BEND = 0.9;
         let greetingState = {
@@ -1138,7 +1177,6 @@
             buildBookshelfAndBooks();
             buildRealisticWorkstation();
             buildChairAndCharacter();
-            buildInteractionHints();
 
             // Raycaster for mouse/touch interactions
             raycaster = new THREE.Raycaster();
@@ -1152,6 +1190,7 @@
             renderer.domElement.addEventListener('click', onCanvasClick);
             window.addEventListener('resize', onWindowResize);
 
+            initHotspotLabels();
             let savedNight = false;
             try { savedNight = localStorage.getItem('studio-night') === '1'; } catch (e) {}
             setNightMode(savedNight);
@@ -1632,7 +1671,9 @@
 
                 const spineTex = createBookSpineTexture(book);
                 const spineMat = new THREE.MeshStandardMaterial({ map: spineTex, roughness: 0.5 });
-                localizedTextures.push(() => { if (spineMat.map) spineMat.map.dispose(); spineMat.map = createBookSpineTexture(book); spineMat.needsUpdate = true; });
+                localizedTextures.push(() => { if (spineMat.map) spineMat.map.dispose(); spineMat.map = createBookSpineTexture(book); spineMat.emissiveMap = spineMat.map; spineMat.needsUpdate = true; });
+                spineMat.emissive = new THREE.Color('#ffffff'); spineMat.emissiveMap = spineTex; spineMat.emissiveIntensity = 0;
+                bookSpineMaterials.push(spineMat);
                 const coverMat = new THREE.MeshStandardMaterial({ color: book.spineColor, roughness: 0.6 });
 
                 const materials = [coverMat, coverMat, pageMat, pageMat, spineMat, pageMat];
@@ -2624,6 +2665,7 @@
 
             if (intersects.length > 0) {
                 const hit = intersects[0].object;
+                if (!labelHoverZone) setHotZone(TYPE_TO_ZONE[hit.userData.type] || null);
                 if (hoveredObject !== hit) {
                     if (hoveredObject && hoveredObject.userData.type === 'book' && selectedObject !== hoveredObject) {
                         hoveredObject.userData.targetZ = hoveredObject.userData.baseZ;
@@ -2668,6 +2710,7 @@
                 }
                 document.body.style.cursor = 'default';
                 if (tooltip) tooltip.classList.add('hidden');
+                if (!labelHoverZone) setHotZone(null);
             }
         }
 
@@ -2728,7 +2771,10 @@
 
         function focusZone(zone) {
             const p = new THREE.Vector3(), q = new THREE.Vector3();
-            if (zone === 'galleryLeft') {
+            if (zone === 'wall') {
+                p.set(1.48, 2.25, 1.15);
+                q.set(1.48, 2.25, -1.89);
+            } else if (zone === 'galleryLeft') {
                 p.set(0.76, 2.19, 0.35);
                 q.set(0.76, 2.19, -1.89);
             } else if (zone === 'galleryRight') {
@@ -2756,8 +2802,7 @@
             studioLights.dir.intensity = L(0.6, 0.07, b);
             studioLights.dir.color.copy(DAY_DIR).lerp(NIGHT_DIR, b);
             studioLights.spots.forEach(sp => sp.intensity = sp.userData.dayIntensity * L(1, sp.userData.nightMul, b));
-            // Pictures get a soft self-glow at night so their text stays readable
-            frameArtMaterials.forEach(m => { m.emissiveIntensity = 0.45 * b; });
+
             if (studioLights.lamp) {
                 studioLights.lamp.spot.intensity = 2.6 * b;
                 studioLights.lamp.glow.intensity = 0.9 * b;
@@ -2787,6 +2832,7 @@
             const modal = document.getElementById('directory-modal');
             if (modal && !modal.classList.contains('hidden')) openDirectoryModal();
             if (!demoRunning) selectAutomationScenario(currentScenarioIdx);
+            if (listSheetKind) openListSheet(listSheetKind);
         };
 
         // ---------------------------------------------------------------------
@@ -2855,6 +2901,152 @@
                 const pulse = 1 + Math.sin(t * 3 + u.phase) * 0.05;
                 sp.scale.set(u.base * pulse, u.base * 0.312 * pulse, 1);
             });
+        }
+
+        // ---------------------------------------------------------------------
+        // At-a-glance navigation: labels pinned to objects, list sheet, hover glow
+        // ---------------------------------------------------------------------
+        const HOTSPOT_ANCHORS = {
+            projects: new THREE.Vector3(0.35, 3.0, -1.84),   // top-left of the frame wall
+            skills:   new THREE.Vector3(1.48, 3.55, -1.72),  // above the bookshelf
+            demo:     new THREE.Vector3(1.42, 1.66, -1.12)   // above the Mac
+        };
+        const TYPE_TO_ZONE = { project: 'projects', book: 'skills', monitor: 'demo' };
+        const zoneGlow = { projects: 0, skills: 0 };
+        const zoneGlowTarget = { projects: 0, skills: 0 };
+        let labelHoverZone = null;
+        let listSheetKind = null;
+
+        function setHotZone(zone) {
+            document.querySelectorAll('[data-zone],[data-zone-btn]').forEach(el => {
+                const z = el.getAttribute('data-zone') || el.getAttribute('data-zone-btn');
+                el.classList.toggle('is-hot', !!zone && z === zone);
+            });
+            zoneGlowTarget.projects = zone === 'projects' ? 1 : 0;
+            zoneGlowTarget.skills = zone === 'skills' ? 1 : 0;
+        }
+        function dismissNudge() {
+            const n = document.getElementById('start-nudge');
+            if (n) n.classList.add('hidden');
+            try { localStorage.setItem('studio-nudge-seen', '1'); } catch (e) {}
+        }
+        function openZone(zone) {
+            dismissNudge();
+            if (zone === 'projects') { focusZone('wall'); openListSheet('projects'); }
+            else if (zone === 'skills') { focusZone('bookshelf'); openListSheet('skills'); }
+            else if (zone === 'demo') { switchTab('automation'); if (typeof startScreeningDemo === 'function') startScreeningDemo(); }
+        }
+        function openListSheet(kind) {
+            const body = document.getElementById('list-sheet-body');
+            const title = document.getElementById('list-sheet-title');
+            const ja = getLang() === 'ja';
+            if (kind === 'projects') {
+                title.textContent = ja ? '実績一覧（8件）' : 'All projects (8)';
+                body.innerHTML = projectsData.map(L10N).map((p, i) => `
+                    <button onclick="closeListSheet(); openDetailDrawer('project', projectsData[${i}])" class="w-full text-left rounded-2xl bg-white border border-subtleBorder hover:border-oakWood hover:shadow-md transition p-4 min-h-[44px]">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="hs-num" style="width:24px;height:24px;font-size:12px">${i + 1}</span>
+                            <span class="text-xs font-semibold text-oakWood">${ja ? '作品' : 'Project'} 0${i + 1}</span>
+                        </div>
+                        <div class="text-[17px] font-bold text-matteBlack leading-snug">${p.title}</div>
+                        <div class="mt-2 flex flex-wrap items-baseline gap-x-2">
+                            <span class="text-xs text-inkGray">${p.metricLabel}</span>
+                            <span class="text-base font-extrabold" style="color:#B7791F">${p.metricValue}</span>
+                        </div>
+                        <div class="mt-1.5 text-sm font-semibold text-matteBlack/80">${p.stackValue}</div>
+                        <div class="mt-2 text-sm font-semibold text-oakWood">${ja ? '詳しく見る ›' : 'View details ›'}</div>
+                    </button>`).join('');
+            } else {
+                title.textContent = ja ? 'スキル一覧（5分野）' : 'Skills (5 areas)';
+                body.innerHTML = BOOKS_DATA.map(L10N).map((b, i) => `
+                    <button onclick="closeListSheet(); openDetailDrawer('book', BOOKS_DATA[${i}])" class="w-full text-left rounded-2xl bg-white border border-subtleBorder hover:border-oakWood hover:shadow-md transition p-4 min-h-[44px]">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 self-stretch rounded-full" style="background:${b.spineColor}"></span>
+                            <div>
+                                <div class="text-[17px] font-bold text-matteBlack leading-snug">${b.title}</div>
+                                <div class="mt-1 text-sm font-semibold text-matteBlack/80">${b.stackValue}</div>
+                                <div class="mt-2 text-sm font-semibold text-oakWood">${ja ? '詳しく見る ›' : 'View details ›'}</div>
+                            </div>
+                        </div>
+                    </button>`).join('');
+            }
+            listSheetKind = kind;
+            document.getElementById('list-sheet-backdrop').classList.remove('hidden');
+        }
+        function closeListSheet() {
+            document.getElementById('list-sheet-backdrop').classList.add('hidden');
+            listSheetKind = null;
+        }
+
+        // Pin the HTML labels over their 3D anchors and push apart any that overlap
+        function updateHotspots() {
+            const wrap = document.getElementById('hotspots');
+            if (!wrap || !camera || !renderer) return;
+            const canvasRect = renderer.domElement.getBoundingClientRect();
+            const wrapRect = wrap.getBoundingClientRect();
+            if (!canvasRect.width) return;
+            const items = [];
+            wrap.querySelectorAll('.hotspot').forEach(el => {
+                const anchor = HOTSPOT_ANCHORS[el.getAttribute('data-zone')];
+                const v = anchor.clone().project(camera);
+                const visible = v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+                const x = canvasRect.left - wrapRect.left + (v.x + 1) / 2 * canvasRect.width;
+                const y = canvasRect.top - wrapRect.top + (1 - v.y) / 2 * canvasRect.height;
+                items.push({ el, x, y, visible, w: el.offsetWidth, h: el.offsetHeight });
+            });
+            // Each label box spans [top, bottom] above its anchor; the "Start here" bubble adds height on top
+            const nudge = document.getElementById('start-nudge');
+            items.forEach(it => {
+                it.extra = (nudge && !nudge.classList.contains('hidden') && it.el.contains(nudge)) ? nudge.offsetHeight + 10 : 0;
+                it.top = () => it.y - it.h - 10 - it.extra;
+                it.bottom = () => it.y - 10;
+                it.moveTopTo = (t) => { it.y = t + it.h + 10 + it.extra; };
+            });
+            const hOverlap = (A, B) => Math.abs(A.x - B.x) < (A.w + B.w) / 2 + 6;
+            // keep labels clear of the headline card
+            const head = document.getElementById('studio-headline');
+            const hr = head ? head.firstElementChild.getBoundingClientRect() : null;
+            if (hr && hr.width) {
+                const hb = { l: hr.left - wrapRect.left - 6, r: hr.right - wrapRect.left + 6, t: hr.top - wrapRect.top - 6, b: hr.bottom - wrapRect.top + 6 };
+                items.forEach(it => {
+                    const l = it.x - it.w / 2, r = it.x + it.w / 2;
+                    if (r > hb.l && l < hb.r && it.bottom() > hb.t && it.top() < hb.b) it.moveTopTo(hb.b + 4);
+                });
+            }
+            // then push apart labels that overlap each other
+            items.sort((a, b) => a.top() - b.top());
+            for (let i = 1; i < items.length; i++) {
+                for (let j = 0; j < i; j++) {
+                    const A = items[j], B = items[i];
+                    if (hOverlap(A, B) && B.top() < A.bottom() + 6 && B.bottom() > A.top()) B.moveTopTo(A.bottom() + 6);
+                }
+            }
+            const margin = 8;
+            items.forEach(it => {
+                const half = it.w / 2;
+                const x = Math.min(wrapRect.width - margin - half, Math.max(margin + half, it.x));
+                it.el.style.left = x + 'px';
+                it.el.style.top = it.y + 'px';
+                it.el.style.opacity = it.visible ? '1' : '0';
+                it.el.style.pointerEvents = it.visible ? 'auto' : 'none';
+            });
+        }
+        function updateZoneGlow() {
+            ['projects', 'skills'].forEach(z => { zoneGlow[z] += (zoneGlowTarget[z] - zoneGlow[z]) * 0.15; });
+            frameArtMaterials.forEach(m => { m.emissiveIntensity = 0.45 * nightBlend + 0.28 * zoneGlow.projects; });
+            bookSpineMaterials.forEach(m => { m.emissiveIntensity = 0.35 * zoneGlow.skills; });
+        }
+        function initHotspotLabels() {
+            document.querySelectorAll('[data-zone],[data-zone-btn]').forEach(el => {
+                const z = el.getAttribute('data-zone') || el.getAttribute('data-zone-btn');
+                el.addEventListener('mouseenter', () => { labelHoverZone = z; setHotZone(z); });
+                el.addEventListener('mouseleave', () => { labelHoverZone = null; setHotZone(null); });
+                el.addEventListener('focus', () => setHotZone(z));
+                el.addEventListener('blur', () => setHotZone(null));
+            });
+            let seen = false;
+            try { seen = localStorage.getItem('studio-nudge-seen') === '1'; } catch (e) {}
+            if (!seen) document.getElementById('start-nudge')?.classList.remove('hidden');
         }
 
         function animateThreeStudio() {
@@ -3044,6 +3236,8 @@
             }
 
             updateMonitorCanvas();
+            updateHotspots();
+            updateZoneGlow();
 
             if (controls) {
                 controls.update();
