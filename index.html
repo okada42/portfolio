@@ -1136,6 +1136,7 @@
             buildBookshelfAndBooks();
             buildRealisticWorkstation();
             buildChairAndCharacter();
+            buildInteractionHints();
 
             // Raycaster for mouse/touch interactions
             raycaster = new THREE.Raycaster();
@@ -1353,59 +1354,75 @@
             }
         }
 
+        // Wrap text into at most `maxLines` lines, shrinking the font until it fits (word wrap for EN, character wrap for JA)
+        function drawWrapped(ctx, text, x, y, maxW, maxLines, maxSize, minSize, weight, family, lineGap) {
+            const en = getLang() === 'en';
+            const tokens = en ? text.split(' ') : Array.from(text);
+            const join = en ? ' ' : '';
+            let size = maxSize, lines = [];
+            for (; size >= minSize; size -= 2) {
+                ctx.font = `${weight} ${size}px ${family}`;
+                lines = []; let cur = '';
+                tokens.forEach(t => {
+                    const test = cur ? cur + join + t : t;
+                    if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = t; } else cur = test;
+                });
+                if (cur) lines.push(cur);
+                if (lines.length <= maxLines) break;
+            }
+            if (lines.length > maxLines) {
+                lines = lines.slice(0, maxLines);
+                let last = lines[maxLines - 1];
+                while (last.length > 1 && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+                lines[maxLines - 1] = last + '…';
+            }
+            lines.forEach((l, i) => ctx.fillText(l, x, y + i * size * (lineGap || 1.18)));
+            return size;
+        }
+
         function createProjectFrameTexture(proj, index) {
             proj = L10N(proj);
+            const W = 1024, H = 704;   // same aspect as the 0.80 x 0.54 print, doubled for sharp text
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 352;
+            canvas.width = W;
+            canvas.height = H;
             const ctx = canvas.getContext('2d');
+            const JP = '"Noto Sans JP", Inter, sans-serif';
 
-            // Gallery Matting Background
+            // White mat
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, 512, 352);
+            ctx.fillRect(0, 0, W, H);
 
-            // Inner Artwork Card
+            // Artwork card
             ctx.fillStyle = proj.accentColor;
-            ctx.fillRect(24, 24, 464, 212);
-
-            // Minimalist Architectural Geometric Accent
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.13)';
+            ctx.fillRect(40, 40, W - 80, 470);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
             ctx.beginPath();
-            ctx.arc(420, 86, 68, 0, Math.PI * 2);
+            ctx.arc(W - 150, 150, 120, 0, Math.PI * 2);
             ctx.fill();
 
+            // Number
             ctx.fillStyle = '#FDE68A';
-            ctx.font = '600 15px monospace';
-            ctx.fillText(getLang() === 'ja' ? `作品 0${index + 1}` : `ARCHIVE 0${index + 1}`, 42, 58);
+            ctx.font = `700 32px ${JP}`;
+            ctx.fillText(getLang() === 'ja' ? `作品 0${index + 1}` : `PROJECT 0${index + 1}`, 80, 104);
 
+            // Title: large, up to two lines
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = '700 21px "Noto Sans JP", Inter, sans-serif';
-            const shortTitle = proj.title.length > 17 ? proj.title.slice(0, 17) + '...' : proj.title;
-            ctx.fillText(shortTitle, 42, 102);
+            drawWrapped(ctx, proj.title, 80, 186, W - 160, 2, 64, 40, 800, JP, 1.2);
 
-            ctx.fillStyle = '#E2E8F0';
-            ctx.font = '14px monospace';
-            ctx.fillText(proj.subtitle, 42, 136);
-
-            // Metric Pill inside Frame
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.36)';
-            ctx.fillRect(42, 166, 310, 42);
+            // Key result
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+            ctx.font = `600 30px ${JP}`;
+            ctx.fillText(proj.metricLabel, 80, 388);
             ctx.fillStyle = '#FDE68A';
-            ctx.font = '600 14px "Noto Sans JP", sans-serif';
-            ctx.fillText(`${proj.metricLabel}: ${proj.metricValue}`, 54, 192);
+            drawWrapped(ctx, proj.metricValue, 80, 460, W - 160, 1, 58, 32, 800, JP);
 
-            // Bottom Gallery Caption Area (title + tech stack: black, bold, auto-fit to the matte width)
-            const fitText = (text, weight, maxSize, family, y, color) => {
-                let size = maxSize;
-                do { ctx.font = `${weight} ${size}px ${family}`; size -= 1; } while (ctx.measureText(text).width > 464 && size > 10);
-                ctx.fillStyle = color;
-                ctx.fillText(text, 24, y);
-            };
-            fitText(proj.title, 700, 19, '"Noto Sans JP", sans-serif', 278, '#111111');
-            fitText(proj.stackValue, 800, 20, '"Noto Sans JP", Inter, sans-serif', 314, '#000000');
+            // Tech stack under the card: big, bold, black
+            ctx.fillStyle = '#000000';
+            drawWrapped(ctx, proj.stackValue, 48, 600, W - 96, 2, 46, 28, 800, JP, 1.2);
 
             const tex = new THREE.CanvasTexture(canvas);
-            tex.anisotropy = 4;
+            tex.anisotropy = 8;
             tex.encoding = THREE.sRGBEncoding; // canvas colours are sRGB; without this they render washed out
             return tex;
         }
@@ -1542,29 +1559,33 @@
         function createBookSpineTexture(book) {
             book = L10N(book);
             const canvas = document.createElement('canvas');
-            canvas.width = 128;
+            canvas.width = 160;
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
             ctx.fillStyle = book.spineColor;
-            ctx.fillRect(0, 0, 128, 512);
+            ctx.fillRect(0, 0, 160, 512);
 
-            ctx.fillStyle = 'rgba(253, 230, 138, 0.45)';
-            ctx.fillRect(14, 32, 100, 4);
-            ctx.fillRect(14, 476, 100, 4);
+            ctx.fillStyle = 'rgba(253, 230, 138, 0.55)';
+            ctx.fillRect(16, 22, 128, 5);
+            ctx.fillRect(16, 485, 128, 5);
 
+            // Title runs along the spine, as large as fits
             ctx.save();
-            ctx.translate(64, 256);
+            ctx.translate(80, 256);
             ctx.rotate(Math.PI / 2);
-            ctx.fillStyle = '#F8F7F4';
-            ctx.font = '700 26px Inter, sans-serif';
+            ctx.fillStyle = '#FFFFFF';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(book.spineTitle, 0, 0);
+            let size = 64;
+            do { ctx.font = `800 ${size}px "Noto Sans JP", Inter, sans-serif`; size -= 2; } while (ctx.measureText(book.spineTitle).width > 430 && size > 28);
+            ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 4;
+            ctx.fillText(book.spineTitle, 0, 4);
             ctx.restore();
 
             const tex = new THREE.CanvasTexture(canvas);
-            tex.anisotropy = 4;
+            tex.anisotropy = 8;
+            tex.encoding = THREE.sRGBEncoding;
             return tex;
         }
 
@@ -2663,6 +2684,7 @@
                 isCameraAnimating = true;
             }
 
+            markHintSeen(hoveredObject.userData.type);
             if (hoveredObject.userData.type === 'monitor') {
                 switchTab('automation');
                 startScreeningDemo();
@@ -2759,6 +2781,75 @@
             if (!demoRunning) selectAutomationScenario(currentScenarioIdx);
         };
 
+        // ---------------------------------------------------------------------
+        // Interaction hints: pulsing labels that tell visitors what they can click / tap
+        // ---------------------------------------------------------------------
+        const interactionHints = [];
+        function buildInteractionHints() {
+            const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            const HINTS = [
+                { key: 'project',   pos: new THREE.Vector3(0.2, 1.6, -1.8), ja: [touch ? 'タップで' : 'クリックで', '作品の詳細'], en: [touch ? 'Tap a frame' : 'Click a frame', 'for details'] },
+                { key: 'book',      pos: new THREE.Vector3(2.62, 3.25, -1.7),   ja: [touch ? 'タップで' : 'クリックで', 'スキルを見る'], en: [touch ? 'Tap a book' : 'Click a book', 'to see skills'] },
+                { key: 'monitor',   pos: new THREE.Vector3(2.85, 1.2, -1.0),    ja: [touch ? 'タップで' : 'クリックで', 'ライブデモ'], en: [touch ? 'Tap the screen' : 'Click the screen', 'for a live demo'] },
+                { key: 'character', follow: true,                              ja: [touch ? 'タップで' : 'クリックで', 'あいさつ'], en: [touch ? 'Tap me' : 'Click me', 'to say hi'] }
+            ];
+            HINTS.forEach(h => {
+                const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 160;
+                const ctx = canvas.getContext('2d');
+                const tex = new THREE.CanvasTexture(canvas); tex.encoding = THREE.sRGBEncoding;
+                const draw = () => {
+                    const [l1, l2] = getLang() === 'ja' ? h.ja : h.en;
+                    ctx.clearRect(0, 0, 512, 160);
+                    ctx.fillStyle = 'rgba(26, 26, 26, 0.88)';
+                    ctx.beginPath(); ctx.roundRect(6, 6, 500, 128, 64); ctx.fill();
+                    ctx.strokeStyle = '#D9A441'; ctx.lineWidth = 5; ctx.stroke();
+                    // pointer pip
+                    ctx.fillStyle = 'rgba(26, 26, 26, 0.88)';
+                    ctx.beginPath(); ctx.moveTo(236, 132); ctx.lineTo(256, 156); ctx.lineTo(276, 132); ctx.fill();
+                    // tap/click icon: concentric rings
+                    ctx.strokeStyle = '#FDE68A'; ctx.lineWidth = 5;
+                    ctx.beginPath(); ctx.arc(76, 70, 26, 0, Math.PI * 2); ctx.stroke();
+                    ctx.fillStyle = '#FDE68A'; ctx.beginPath(); ctx.arc(76, 70, 11, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#FDE68A'; ctx.font = '700 34px "Noto Sans JP", Inter, sans-serif'; ctx.textBaseline = 'middle';
+                    ctx.fillText(l1, 124, 50);
+                    ctx.fillStyle = '#FFFFFF'; ctx.font = '800 40px "Noto Sans JP", Inter, sans-serif';
+                    ctx.fillText(l2, 124, 96);
+                    tex.needsUpdate = true;
+                };
+                draw();
+                localizedTextures.push(draw);
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, opacity: 0 }));
+                sprite.renderOrder = 10;
+                sprite.scale.set(0.72, 0.225, 1);
+                if (h.pos) sprite.position.copy(h.pos);
+                sprite.userData = { key: h.key, follow: !!h.follow, seen: false, base: 0.72, phase: Math.random() * 6 };
+                scene.add(sprite);
+                interactionHints.push(sprite);
+            });
+        }
+        function markHintSeen(key) {
+            interactionHints.forEach(sp => { if (sp.userData.key === key) sp.userData.seen = true; });
+        }
+        function updateInteractionHints(greetBlend) {
+            if (!interactionHints.length || !camera) return;
+            const t = performance.now() * 0.001;
+            interactionHints.forEach(sp => {
+                const u = sp.userData;
+                if (u.follow && characterRig && characterRig.bones && characterRig.bones.Head) {
+                    characterRig.bones.Head.getWorldPosition(sp.position);
+                    sp.position.y += 0.42;
+                }
+                // fade out once used, while greeting (for the character), or when the camera is very close
+                const near = camera.position.distanceTo(sp.position) < 1.1;
+                let target = u.seen || near ? 0 : 0.95;
+                if (u.key === 'character') target *= (1 - greetBlend);
+                sp.material.opacity += (target - sp.material.opacity) * 0.08;
+                sp.visible = sp.material.opacity > 0.02;
+                const pulse = 1 + Math.sin(t * 3 + u.phase) * 0.05;
+                sp.scale.set(u.base * pulse, u.base * 0.312 * pulse, 1);
+            });
+        }
+
         function animateThreeStudio() {
             requestAnimationFrame(animateThreeStudio);
 
@@ -2826,6 +2917,7 @@
                 characterRig.swivelGroup.rotation.y = REST_SWIVEL + greetBlend * delta;
                 characterRig.rootGroup.position.z = -0.3 + greetBlend * 0.32;    // roll the chair back first
                 characterRig.welcomeBadge.material.opacity = greetBlend;
+                updateInteractionHints(greetBlend);
                 characterRig.welcomeBadge.position.y = 1.42 + Math.sin(t * 2.0) * 0.015;
 
                 // Bone-driven pose on top of the frozen seated pose
